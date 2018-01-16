@@ -49,13 +49,26 @@ class ComprovantePagto:
         info = locale.localeconv()  # formatando moeda local
         print("\n\n")
         print(self.banco,"              \n")
-        print("COMPROVANTE DE PAGAMENTO DE", self.tipoGuia, "\n\n")
+        print("COMPROVANTE DE PAGAMENTO DE", self.tipoGuia, "\n")
         print("DADOS DO EMITENTE \nNOME: \nCPF/CNPJ: 00000000000000  \n")
         print("CODIGO DO PAGAMENTO:  ", self.codigo)
         print("COMPETENCIA:  ",self.competencia)
         print( "IDENTIFICADOR:  ",self.identificador,"\n")
         print("VALOR PRINCIPAL:  ",info['currency_symbol'],locale.format("%1.2f",self.valor_principal,1),"\n")
-        print(info['currency_symbol'],locale.format("%1.2f",self.valor_principal,1))
+        print("VALOR DE OUTRAS ENT: ",info['currency_symbol'],locale.format("%1.2f",self.valor_outras_ent,1),
+              "\nVALOR DO ATM/JUR/MULT:",info['currency_symbol'],locale.format("%1.2f",self.valor_jur,1),
+              "\nVALOR ARRECADADO: ", info['currency_symbol'], locale.format("%1.2f", self.valor_total, 1),"\n")
+        print("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n")
+
+        print("CICLO: \nREALIZADO EM:  as  \nAG.0000 Nome Agencia \n")
+
+        print("\t\t\t AUTENTICACAO \n000000000000000000000000000")
+
+
+
+
+
+        #print(info['currency_symbol'],locale.format("%1.2f",self.valor_principal,1))
         print('----')
 
 
@@ -297,7 +310,8 @@ def main():
 
                                         pagamentoN = ComprovantePagto(bancoSelecionado[2].upper(),guiaSelecionada[2].upper(),"2100",
                                                                       DataVencimento, EntradaData, competencia.strftime("%m/%Y"),identificador,ValorPrincipal,
-                                                                      ValorOutrasEnt," ",ValorArrecadado)
+                                                                      ValorOutrasEnt,ValorJurosMulta,ValorArrecadado)
+
 
                                         pagamentoN.MostraRecibo()
 
