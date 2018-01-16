@@ -15,7 +15,7 @@ import sqlite3
 import os.path
 from contextlib import closing
 
-import time, calendar, datetime, random
+import time, calendar, datetime, random, locale
 
 from _datetime import datetime as dt
 
@@ -45,14 +45,18 @@ class ComprovantePagto:
 
 
     def MostraRecibo(self):
+        locale.setlocale(locale.LC_ALL, "")
+        info = locale.localeconv()  # formatando moeda local
         print("\n\n")
         print(self.banco,"              \n")
         print("COMPROVANTE DE PAGAMENTO DE", self.tipoGuia, "\n\n")
-        print("DADOS DO EMITENTE \nNOME: \nCPF/CNPJ: 00000000000000  \n \n")
+        print("DADOS DO EMITENTE \nNOME: \nCPF/CNPJ: 00000000000000  \n")
         print("CODIGO DO PAGAMENTO:  ", self.codigo)
         print("COMPETENCIA:  ",self.competencia)
         print( "IDENTIFICADOR:  ",self.identificador,"\n")
-        print("VALOR PRINCIPAL:  ","R$ ",self.valor_principal,"\n")
+        print("VALOR PRINCIPAL:  ",info['currency_symbol'],locale.format("%1.2f",self.valor_principal,1),"\n")
+        print(info['currency_symbol'],locale.format("%1.2f",self.valor_principal,1))
+        print('----')
 
 
 
@@ -218,10 +222,6 @@ def monthdelta(date, delta):
 
 
 def main():
-    #conn=sqlite3.connect('bancos.db')
-    #verificaTabelaDB(conn,bancos)
-
-    numeroPagto = 1
 
     if(verificaBD()):
         print("usando lista de bancos locais \n \n")
@@ -280,13 +280,17 @@ def main():
 
                                         competencia=monthdelta(datetime.datetime.strptime(DataVencimento, "%d/%m/%Y"), -1)
 
-                                        ident = random.randint(1111111111111,12999999999999)
+                                        ident = random.randint(1111111111111,11111111111111)
 
+                                        identificador = "{:0>14d}".format(ident)
+
+
+                                        '''
                                         if(len(str(ident))<14):
                                             identificador="0"+str(ident)
                                         else:
                                             identificador=str(ident)
-
+'                                       '''
 
                                         ValorArrecadado=ValorPrincipal+ValorOutrasEnt+ValorJurosMulta
 
