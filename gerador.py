@@ -15,25 +15,44 @@ import sqlite3
 import os.path
 from contextlib import closing
 
-import time
+import time, calendar, datetime, random
 
-import datetime, calendar
+from _datetime import datetime as dt
 
 # import netifaces
 
 class ComprovantePagto:
-    def __init__(self, banco, tipoGuia, codigo, data_venc, data_pagto, valor_principal,
-                 valor_outras_ent, valor_jur):
+    'classe comum para todos os pagamentos'
+    compCount = 0
 
+    def __init__(self, banco, tipoGuia, codigo, data_venc, data_pagto, competencia, identificador, valor_principal,
+                 valor_outras_ent, valor_jur, valor_total):
         self.banco=banco
         self.tipoGuia=tipoGuia
         self.codigo=codigo
         self.data_venc=data_venc
         self.data_pagto=data_pagto
+        self.competencia=competencia
+        self.identificador=identificador
         self.valor_principal=valor_principal
         self.valor_outras_ent=valor_outras_ent
         self.valor_jur=valor_jur
+        self.valor_total=valor_total
+        ComprovantePagto.compCount +=1
 
+    def displayCount(self):
+        print("Total de Pagamentos %d") % ComprovantePagto.compCount
+
+
+    def MostraRecibo(self):
+        print("\n\n")
+        print(self.banco,"              \n")
+        print("COMPROVANTE DE PAGAMENTO DE", self.tipoGuia, "\n\n")
+        print("DADOS DO EMITENTE \nNOME: \nCPF/CNPJ: 00000000000000  \n \n")
+        print("CODIGO DO PAGAMENTO:  ", self.codigo)
+        print("COMPETENCIA:  ",self.competencia)
+        print( "IDENTIFICADOR:  ",self.identificador,"\n")
+        print("VALOR PRINCIPAL:  ","R$ ",self.valor_principal,"\n")
 
 
 
@@ -176,23 +195,33 @@ def consultaData(data):
     if (len(data)<10 or len(data)>10):
         print('a data deve ter o formado dd/mm/aaaa')
     else:
-        linhaData=data.split("/")
+        #linhaData=data.split("/")
         #for linha in linhaData:
         #    print(linha)
-        print(linhaData[0])
+        #print(linhaData[0])
 
-        diaPagto = datetime.date(linhaData[2],linhaData[1],linhaData[0])
+        diaPagto = datetime.datetime.strptime(data,"%d/%m/%Y")
 
-        print(diaPagto.strftime("%A"))
+        diaDaSemana=diaPagto.strftime("%A")
+        dataPagto=diaPagto.strftime("%d/%m%/%Y")
+
+        return (diaDaSemana,dataPagto)
 
 
-    #return 'hoje'
-
+#Função para calcular o mes anterior - Competencia
+def monthdelta(date, delta):
+    m, y = (date.month+delta) % 12, date.year + ((date.month)+delta-1) // 12
+    if not m: m = 12
+    d = min(date.day, [31,
+        29 if y%4==0 and not y%400==0 else 28,31,30,31,30,31,31,30,31,30,31][m-1])
+    return date.replace(day=d,month=m, year=y)
 
 
 def main():
     #conn=sqlite3.connect('bancos.db')
     #verificaTabelaDB(conn,bancos)
+
+    numeroPagto = 1
 
     if(verificaBD()):
         print("usando lista de bancos locais \n \n")
@@ -221,11 +250,54 @@ def main():
                         guiaSelecionada=consultaGuia(guia)
                         if(guiaSelecionada):
                             while True:
+                                DataVencimento=input("%s | %s | Dig. a Data de Venc. ('v' para voltar):" %(bancoSelecionado[3],guiaSelecionada[1]))
                                 EntradaData=input("%s | %s | Dig. a Data de Pgto ('v' para voltar):" %(bancoSelecionado[3],guiaSelecionada[1]))
+                                #TODO Criar classe de cálculo de juro e mora
                                 if (EntradaData=='v' or EntradaData=='V'):
                                     break
                                 else:
-                                    diaPagto=consultaData(EntradaData)
+                                    diaDaSemana, dataPagto=consultaData(EntradaData)
+
+                                    if(diaDaSemana=="Saturday"):
+                                        print("Esta data cai num Sábado")
+                                    elif(diaDaSemana=="Sunday"):
+                                        print("Esta data cai num Domingo")
+                                    #TODO Fazer aferição de feriados
+                                    #TODO Acertar nova data automaticamente
+                                    else:
+                                        ValorPrincipal=float(input("%s | %s | %s | Valor Principal :" %(bancoSelecionado[3],guiaSelecionada[1],dataPagto )))
+                                        ValorOutrasEnt = float(input(
+                                            "%s | %s | %s | Outras Ent :" % (
+                                            bancoSelecionado[3], guiaSelecionada[1], dataPagto)))
+
+                                        #TODO criar avaliação de entrada para campos sem nenhum informação (APENAS ENTER)
+
+                                        ValorJurosMulta = float(input(
+                                            "%s | %s | %s | ATM/JUR/MULTAS :" % (
+                                            bancoSelecionado[3], guiaSelecionada[1], dataPagto)))
+
+                                        #d=datetime.datetime.strptime(DataVencimento, "%d/%m/%Y")
+
+                                        competencia=monthdelta(datetime.datetime.strptime(DataVencimento, "%d/%m/%Y"), -1)
+
+                                        ident = random.randint(1111111111111,12999999999999)
+
+                                        if(len(str(ident))<14):
+                                            identificador="0"+str(ident)
+                                        else:
+                                            identificador=str(ident)
+
+
+                                        ValorArrecadado=ValorPrincipal+ValorOutrasEnt+ValorJurosMulta
+
+
+                                        pagamentoN = ComprovantePagto(bancoSelecionado[2].upper(),guiaSelecionada[2].upper(),"2100",
+                                                                      DataVencimento, EntradaData, competencia.strftime("%m/%Y"),identificador,ValorPrincipal,
+                                                                      ValorOutrasEnt," ",ValorArrecadado)
+
+                                        pagamentoN.MostraRecibo()
+
+
 
 
 if __name__ == '__main__':
