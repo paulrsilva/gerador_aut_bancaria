@@ -21,6 +21,10 @@ from _datetime import datetime as dt
 
 # import netifaces
 
+HorarioBancario=('10:00','16:00')
+HorarioUltimoPagto=0
+
+
 class ComprovantePagto:
     'classe comum para todos os pagamentos'
     compCount = 0
@@ -38,21 +42,29 @@ class ComprovantePagto:
         self.valor_outras_ent=valor_outras_ent
         self.valor_jur=valor_jur
         self.valor_total=valor_total
+
         ComprovantePagto.compCount +=1
+
+    def Ciclo(self):
+        ident = random.randint(11111111111111111, 1299999999999999999)
+        identificador = "{:0>19d}".format(ident)
+        ciclo=self.competencia.strftime("%d.%m.%Y")+identificador
+        return ciclo
+
 
     def displayCount(self):
         print("Total de Pagamentos %d") % ComprovantePagto.compCount
 
 
-    def MostraRecibo(self):
+    def MostraRecibo(self,ciclo):
         locale.setlocale(locale.LC_ALL, "")
         info = locale.localeconv()  # formatando moeda local
         print("\n\n")
-        print(self.banco,"              \n")
-        print("COMPROVANTE DE PAGAMENTO DE", self.tipoGuia, "\n")
+        print(self.banco[2].upper(),"              \n")
+        print("COMPROVANTE DE PAGAMENTO DE", self.tipoGuia[2].upper(), "\n")
         print("DADOS DO EMITENTE \nNOME: \nCPF/CNPJ: 00000000000000  \n")
         print("CODIGO DO PAGAMENTO:  ", self.codigo)
-        print("COMPETENCIA:  ",self.competencia)
+        print("COMPETENCIA:  ",self.competencia.strftime("%m/%Y"))
         print( "IDENTIFICADOR:  ",self.identificador,"\n")
         print("VALOR PRINCIPAL:  ",info['currency_symbol'],locale.format("%1.2f",self.valor_principal,1),"\n")
         print("VALOR DE OUTRAS ENT: ",info['currency_symbol'],locale.format("%1.2f",self.valor_outras_ent,1),
@@ -60,12 +72,11 @@ class ComprovantePagto:
               "\nVALOR ARRECADADO: ", info['currency_symbol'], locale.format("%1.2f", self.valor_total, 1),"\n")
         print("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n")
 
-        print("CICLO: \nREALIZADO EM:  as  \nAG.0000 Nome Agencia \n")
+        #print("CICLO:   ",ciclo," \nREALIZADO EM:  as  \nAG.0000 Nome Agencia \n")
+        print("CICLO:  %s \nREALIZADO EM: %s as  \nAG.0000 Nome Agencia \n" % (ciclo, self.data_pagto.strftime("%d/%m/%Y")))
 
-        print("\t\t\t AUTENTICACAO \n000000000000000000000000000")
-
-
-
+        print("\t\t\t AUTENTICACAO \n000000000000000000000000000 \n")
+        print(self.banco[3]," 806248887   ",self.data_pagto.strftime("%d%m%y"),"   ",locale.format("%1.2f", self.valor_total, 1),"   ",self.tipoGuia[1]+"DIN")
 
 
         #print(info['currency_symbol'],locale.format("%1.2f",self.valor_principal,1))
@@ -233,6 +244,110 @@ def monthdelta(date, delta):
         29 if y%4==0 and not y%400==0 else 28,31,30,31,30,31,31,30,31,30,31][m-1])
     return date.replace(day=d,month=m, year=y)
 
+#Sistema Principal de Autenticacao
+def SistemaAutenticacao():
+    print("\n *** Sistema de Autenticações Bancárias. Digite q para sair *** \n")
+    _run = True
+    while _run:
+        # entrada=int(input("Dados: "))
+        entrada = input("Digite o codigo do banco ou L para lista: ").lower().strip()
+        if entrada == "q":
+            print('Sistema Finalizado')
+            break
+        else:
+            # entradaBanco=input("Digite o codigo do banco ou L para lista: ")
+            bancoSelecionado = consultaBanco(entrada)
+            if (bancoSelecionado):
+                # print(bancoSelecionado[0])
+                print("\n")
+                while _run:
+                    guia = input("%s | Dig. o nº da guia ou L para lista ('v' para voltar): " % (
+                    bancoSelecionado[3])).lower().strip()
+                    if (guia == 'v'):
+                        break
+                    elif(guia.lower()=='q'):
+                        _run=False
+                    else:
+                        guiaSelecionada = consultaGuia(guia)
+                        if (guiaSelecionada):
+                            while _run:
+                                EntradaDataVencimento = input("%s | %s | Dig. a Data de Venc. ('v' para voltar):" % (
+                                bancoSelecionado[3], guiaSelecionada[1]))
+                                if (EntradaDataVencimento.lower()=='v'):
+                                    break
+                                elif (EntradaDataVencimento.lower()=='q'):
+                                    _run=False
+                                    break
+                                else:
+                                    pass
+                                EntradaData = input("%s | %s | Dig. a Data de Pgto ('v' para voltar):" % (
+                                bancoSelecionado[3], guiaSelecionada[1]))
+                                # TODO Criar classe de cálculo de juro e mora
+                                if (EntradaData.lower() == 'v'):
+                                    break
+                                elif(EntradaData.lower()=='q'):
+                                    _run=False
+                                else:
+                                    diaDaSemana, dataPagto = consultaData(EntradaData)
+                                    if (diaDaSemana == "Saturday"):
+                                        print("Esta data cai num Sábado")
+                                    elif (diaDaSemana == "Sunday"):
+                                        print("Esta data cai num Domingo")
+                                    # TODO Fazer aferição de feriados
+                                    # TODO Acertar nova data automaticamente
+                                    else:
+                                        ValorPrincipal = float(input("%s | %s | %s | Valor Principal :" % (
+                                        bancoSelecionado[3], guiaSelecionada[1], dataPagto)))
+                                        ValorOutrasEnt = float(input(
+                                            "%s | %s | %s | Outras Ent :" % (
+                                                bancoSelecionado[3], guiaSelecionada[1], dataPagto)))
+
+                                        # TODO criar avaliação de entrada para campos sem nenhum informação (APENAS ENTER)
+
+                                        ValorJurosMulta = float(input(
+                                            "%s | %s | %s | ATM/JUR/MULTAS :" % (
+                                                bancoSelecionado[3], guiaSelecionada[1], dataPagto)))
+
+                                        #d=datetime.datetime.strptime(DataVencimento, "%d/%m/%Y")
+
+                                        #acertando a hora de pagamento
+                                        hoje = dt.today()
+                                        horaBancAbertura=int(HorarioBancario[0][0:2])
+                                        horaBancFechamento=int(HorarioBancario[1][0:2])
+
+                                        if(hoje.hour < horaBancAbertura or hoje.hour > horaBancFechamento ):
+                                            print("\n*** horario bancario excedido. Gerando horario aleatorio ***")
+                                            hora = str(random.choice(range(10, 16)))
+                                            minuto = "{:0>2d}".format(random.choice(range(0, 59)))
+                                            segundo = "{:0>2d}".format(random.choice(range(0, 59)))
+                                            horarioPagto=("%s:%s:%s" %(hora, minuto, segundo))
+                                        else:
+                                            pass
+
+
+                                        #fim acertando hora de pagto
+
+                                        DataVencimento = datetime.datetime.strptime(EntradaDataVencimento, "%d/%m/%Y")
+                                        DataPgto = datetime.datetime.strptime(EntradaData, "%d/%m/%Y")
+
+                                        competencia = monthdelta(
+                                            datetime.datetime.strptime(EntradaDataVencimento, "%d/%m/%Y"), -1)
+
+                                        ident = random.randint(1111111111111, 11111111111111)
+
+                                        identificador = "{:0>14d}".format(ident)
+
+
+                                        ValorArrecadado = ValorPrincipal + ValorOutrasEnt + ValorJurosMulta
+
+                                        pagamentoN = ComprovantePagto(bancoSelecionado, guiaSelecionada, "2100",
+                                                                      DataVencimento, DataPgto, competencia,
+                                                                      identificador, ValorPrincipal,
+                                                                      ValorOutrasEnt, ValorJurosMulta, ValorArrecadado)
+
+                                        ciclo = pagamentoN.Ciclo()
+
+                                        pagamentoN.MostraRecibo(ciclo)
 
 def main():
 
@@ -241,80 +356,7 @@ def main():
     else:
         print("novo banco de dados padrão criado \n \n ")
 
-
-    print("\n *** Sistema de Autenticações Bancárias. Digite q para sair *** \n" )
-    while True:
-        #entrada=int(input("Dados: "))
-        entrada=input("Digite o codigo do banco ou L para lista: ").lower().strip()
-        if entrada=="q":
-            print('Sistema Finalizado')
-            break
-        else:
-            #entradaBanco=input("Digite o codigo do banco ou L para lista: ")
-            bancoSelecionado=consultaBanco(entrada)
-            if (bancoSelecionado):
-                # print(bancoSelecionado[0])
-                print("\n")
-                while True:
-                    guia=input("%s | Dig. o nº da guia ou L para lista ('v' para voltar): " %(bancoSelecionado[3])).lower().strip()
-                    if(guia=='v'):
-                        break
-                    else:
-                        guiaSelecionada=consultaGuia(guia)
-                        if(guiaSelecionada):
-                            while True:
-                                DataVencimento=input("%s | %s | Dig. a Data de Venc. ('v' para voltar):" %(bancoSelecionado[3],guiaSelecionada[1]))
-                                EntradaData=input("%s | %s | Dig. a Data de Pgto ('v' para voltar):" %(bancoSelecionado[3],guiaSelecionada[1]))
-                                #TODO Criar classe de cálculo de juro e mora
-                                if (EntradaData=='v' or EntradaData=='V'):
-                                    break
-                                else:
-                                    diaDaSemana, dataPagto=consultaData(EntradaData)
-
-                                    if(diaDaSemana=="Saturday"):
-                                        print("Esta data cai num Sábado")
-                                    elif(diaDaSemana=="Sunday"):
-                                        print("Esta data cai num Domingo")
-                                    #TODO Fazer aferição de feriados
-                                    #TODO Acertar nova data automaticamente
-                                    else:
-                                        ValorPrincipal=float(input("%s | %s | %s | Valor Principal :" %(bancoSelecionado[3],guiaSelecionada[1],dataPagto )))
-                                        ValorOutrasEnt = float(input(
-                                            "%s | %s | %s | Outras Ent :" % (
-                                            bancoSelecionado[3], guiaSelecionada[1], dataPagto)))
-
-                                        #TODO criar avaliação de entrada para campos sem nenhum informação (APENAS ENTER)
-
-                                        ValorJurosMulta = float(input(
-                                            "%s | %s | %s | ATM/JUR/MULTAS :" % (
-                                            bancoSelecionado[3], guiaSelecionada[1], dataPagto)))
-
-                                        #d=datetime.datetime.strptime(DataVencimento, "%d/%m/%Y")
-
-                                        competencia=monthdelta(datetime.datetime.strptime(DataVencimento, "%d/%m/%Y"), -1)
-
-                                        ident = random.randint(1111111111111,11111111111111)
-
-                                        identificador = "{:0>14d}".format(ident)
-
-
-                                        '''
-                                        if(len(str(ident))<14):
-                                            identificador="0"+str(ident)
-                                        else:
-                                            identificador=str(ident)
-'                                       '''
-
-                                        ValorArrecadado=ValorPrincipal+ValorOutrasEnt+ValorJurosMulta
-
-
-                                        pagamentoN = ComprovantePagto(bancoSelecionado[2].upper(),guiaSelecionada[2].upper(),"2100",
-                                                                      DataVencimento, EntradaData, competencia.strftime("%m/%Y"),identificador,ValorPrincipal,
-                                                                      ValorOutrasEnt,ValorJurosMulta,ValorArrecadado)
-
-
-                                        pagamentoN.MostraRecibo()
-
+    SistemaAutenticacao()
 
 
 
