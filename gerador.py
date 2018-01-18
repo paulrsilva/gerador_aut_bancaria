@@ -16,6 +16,10 @@ import sqlite3
 import os.path
 from contextlib import closing
 
+import tempfile
+import win32api
+import win32print
+
 import time, calendar, datetime, random, locale
 
 from _datetime import datetime as dt
@@ -30,9 +34,10 @@ class ComprovantePagto:
     'classe comum para todos os pagamentos'
     compCount = 0
 
-    def __init__(self, banco, tipoGuia, codigo, data_venc, data_pagto, horaPagto, competencia, identificador, valor_principal,
+    def __init__(self, banco, agenciaPagto, tipoGuia, codigo, data_venc, data_pagto, horaPagto, competencia, identificador, valor_principal,
                  valor_outras_ent, valor_jur, valor_total, autenticacao):
         self.banco=banco
+        self.agenciaPagto=agenciaPagto
         self.tipoGuia=tipoGuia
         self.codigo=codigo
         self.data_venc=data_venc
@@ -56,7 +61,35 @@ class ComprovantePagto:
 
 
     def displayCount(self):
-        print("Total de Pagamentos %d") % ComprovantePagto.compCount
+        print("Total de Pagamentos %d" % ComprovantePagto.compCount)
+        return ComprovantePagto.compCount
+
+
+    def GeraRecibo(self,ciclo):
+        recibo=open("recibo.tmp","w")
+
+        locale.setlocale(locale.LC_ALL, "")
+        info = locale.localeconv()  # formatando moeda local
+        recibo.write("\n%s              \n\n" %(self.banco[2].upper()))
+        recibo.write("COMPROVANTE DE PAGAMENTO DE %s \n\n" % self.tipoGuia[2].upper())
+        recibo.write("DADOS DO EMITENTE \nNOME: \nCPF/CNPJ: 00000000000000  \n\n")
+        recibo.write("CODIGO DO PAGAMENTO:  %s\n" % self.codigo)
+        recibo.write("COMPETENCIA:  %s\n" % self.competencia.strftime("%m/%Y"))
+        recibo.write("IDENTIFICADOR:  %s\n\n" % self.identificador)
+        recibo.write("VALOR PRINCIPAL:  %s %s \n\n" %( info['currency_symbol'], locale.format("%1.2f", self.valor_principal, 1)))
+        recibo.write("VALOR DE OUTRAS ENT: %s %s\n" %( info['currency_symbol'], locale.format("%1.2f", self.valor_outras_ent, 1)))
+        recibo.write("VALOR DO ATM/JUR/MULT: %s %s\n" %(info['currency_symbol'], locale.format("%1.2f", self.valor_jur, 1)))
+        recibo.write("VALOR ARRECADADO: %s %s\n\n" %( info['currency_symbol'], locale.format("%1.2f", self.valor_total, 1)))
+        recibo.write("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n\n")
+        recibo.write("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.%s %s \n\n" % (
+            ciclo, self.data_pagto.strftime("%d/%m/%Y"), self.horaPagto, self.agenciaPagto[4], self.agenciaPagto[5]))
+
+        recibo.write("\t\t\t AUTENTICACAO \n%s \n\n" % (self.autenticacao[2:40].upper()))
+
+        recibo.write("%s %s   %s   %s   %s   %s\n\n" %(self.banco[3],self.agenciaPagto[4][0:4],"806248887",self.data_pagto.strftime("%d%m%y"),
+                                           locale.format("%1.2f", self.valor_total, 1),self.tipoGuia[1] + "DIN"))
+
+        recibo.close()
 
 
     def MostraRecibo(self,ciclo):
@@ -76,25 +109,47 @@ class ComprovantePagto:
         print("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n")
 
         #print("CICLO:   ",ciclo," \nREALIZADO EM:  as  \nAG.0000 Nome Agencia \n")
-        print("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.0000 Nome Agencia \n" % (ciclo, self.data_pagto.strftime("%d/%m/%Y"),self.horaPagto))
+        print("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.%s %s \n" % (ciclo, self.data_pagto.strftime("%d/%m/%Y"),self.horaPagto,self.agenciaPagto[4],self.agenciaPagto[5]))
 
         print("\t\t\t AUTENTICACAO \n%s \n" %(self.autenticacao[2:40].upper()))
         print(self.banco[3],"806248887   ",self.data_pagto.strftime("%d%m%y"),"   ",locale.format("%1.2f", self.valor_total, 1),"   ",self.tipoGuia[1]+"DIN")
 
 
         #print(info['currency_symbol'],locale.format("%1.2f",self.valor_principal,1))
-        print('----')
+        print('\n----------//-------------\n')
+        while True:
+            entradaRecibo=input("[A]rquivar | [I]mprimir | [S]air :")
+            if(entradaRecibo.lower()=='a'):
+                pass
+            elif(entradaRecibo.lower()=='i'):
+                #ComprovantePagto.GeraRecibo(self)
+
+                os.startfile("recibo.tmp", "print")
+
+            elif(entradaRecibo.lower()=='s'):
+                break
+            else:
+                print("Digite A, I ou S\n")
 
 
 
-bancos = [ ("001", "Banco do Brasil", "BB"),
+
+bancos = [ ("001", "Banco do Brasil S.A.", "BB"),
            ("104","Caixa Econômica Federal", "CE"),
            ("033","Banco Santander (Brasil) S.A.","SBR"),
+           ("341","Itaú Unibanco S.A.","ITAU")
 
 ]
 
 tiposDeGuia = [("GPS", "Guia de Previdência Social"),
                ("GRU", "Guia de Recolhimendo da União" )
+]
+
+
+agencias = [ ("BB","RJ","Petropolis","0080", "PETROPOLIS PETROPOLIS"),
+             ("CE", "RJ", "Petropolis", "1651", "PETROPOLIS UNIAO"),
+             ("SBR", "RJ", "Petropolis", "3242", "PETROPOLIS-CENTRO"),
+             ("ITAU","RJ","Petropolis","0087","PETROPOLIS UNIAO")
 
 ]
 
@@ -121,6 +176,7 @@ def verificaBD():
         conn = sqlite3.connect("bancos.db")
         cursor = conn.cursor()
 
+
         cursor.execute ('''
                 create TABLE bancos(
                   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -146,10 +202,25 @@ def verificaBD():
             INSERT INTO guias(sigla,nome) VALUES (?,?)
         ''', tiposDeGuia)
 
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return False
+        cursor.execute('''
+                CREATE TABLE agencias(
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  banco text,
+                  UF text,
+                  Cidade text,
+                  Agencia text,
+                  nome_agencia text
+                )
+        ''')
+
+    cursor.executemany('''
+           INSERT INTO agencias(banco,UF,Cidade,Agencia,nome_agencia) VALUES (?,?,?,?,?)
+       ''', agencias)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return False
 
 
 #TODO Acertar verificação de tabela
@@ -199,6 +270,31 @@ def consultaBanco(codBanco):
                             print("ok")
                         return False
                         break
+
+def consultaAgencia(sigla_banco):
+    #TODO Desenvolver inclusão e consulta de agencias adicionais
+    '''
+    with sqlite3.connect("bancos.db") as conn:
+        with closing(conn.cursor()) as cursor:
+            cursor.execute("SELECT * FROM agencias WHERE banco=%s" % sigla_banco)
+            resultado=cursor.fetchone()
+            if resultado != None:
+                return resultado
+            else:
+                return False
+    '''
+
+    conn = sqlite3.connect('bancos.db')
+    cursor=conn.cursor()
+    cursor.execute("SELECT * FROM agencias WHERE banco='%s'" %(sigla_banco))
+    while True:
+        resultado = cursor.fetchone()
+        if resultado != None:
+            return resultado
+            break
+        else:
+            print('Não existe AG. para o Banco Selecionado\n')
+            entradaAgencia=input("Adicionar Agencia?")
 
 
 def consultaGuia(guia):
@@ -346,16 +442,34 @@ def SistemaAutenticacao():
 
                                         autenticacao=(str(binascii.b2a_hex(os.urandom(20))))
 
-                                        pagamentoN = ComprovantePagto(bancoSelecionado, guiaSelecionada, "2100",
+                                        #agenciaPagto=consultaGuia(bancoSelecionado[3])
+                                        agenciaPagto=consultaAgencia(bancoSelecionado[3])
+
+                                        pagamentoN = ComprovantePagto(bancoSelecionado,agenciaPagto, guiaSelecionada, "2100",
                                                                       DataVencimento, DataPgto,horaPagto, competencia,
                                                                       identificador, ValorPrincipal,
                                                                       ValorOutrasEnt, ValorJurosMulta, ValorArrecadado,
                                                                       autenticacao)
 
-                                        ciclo = pagamentoN.Ciclo()
 
-                                        pagamentoN.MostraRecibo(ciclo)
+                                        while True:
+                                            EntradaImpressao = input("Digite R para Recibo ou A para Autenticação: ")
+                                            if (EntradaImpressao.lower() == 'r'):
+                                                ciclo = pagamentoN.Ciclo()
+                                                pagamentoN.GeraRecibo(ciclo)
+                                                pagamentoN.MostraRecibo(ciclo)
+                                            elif (EntradaImpressao.lower() == 'a'):
+                                                print("\n\nAUTENTICACAO 999999 999999 999999999 99999999999999999 99999999")
+                                            elif (EntradaImpressao.lower()=='v'):
+                                                break
+                                            elif (EntradaImpressao.lower()=='q'):
+                                                pagamentoN.displayCount()
+                                                _run=False
+                                                break
+                                            else:
+                                                print("\nDigite 'R', 'A', 'V' ou 'Q'" )
 
+                                        print("\n %d Pagamentos Efetuados" % (pagamentoN.displayCount()))
 def main():
 
     if(verificaBD()):
@@ -364,6 +478,8 @@ def main():
         print("novo banco de dados padrão criado \n \n ")
 
     SistemaAutenticacao()
+
+    print("\n\n\n*** SISTEMA FINALIZADO ***\n\n\n")
 
 
 
