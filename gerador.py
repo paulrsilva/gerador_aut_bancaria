@@ -10,6 +10,7 @@ import os
 import socket
 import urllib
 import re
+import binascii
 
 import sqlite3
 import os.path
@@ -29,19 +30,21 @@ class ComprovantePagto:
     'classe comum para todos os pagamentos'
     compCount = 0
 
-    def __init__(self, banco, tipoGuia, codigo, data_venc, data_pagto, competencia, identificador, valor_principal,
-                 valor_outras_ent, valor_jur, valor_total):
+    def __init__(self, banco, tipoGuia, codigo, data_venc, data_pagto, horaPagto, competencia, identificador, valor_principal,
+                 valor_outras_ent, valor_jur, valor_total, autenticacao):
         self.banco=banco
         self.tipoGuia=tipoGuia
         self.codigo=codigo
         self.data_venc=data_venc
         self.data_pagto=data_pagto
+        self.horaPagto=horaPagto
         self.competencia=competencia
         self.identificador=identificador
         self.valor_principal=valor_principal
         self.valor_outras_ent=valor_outras_ent
         self.valor_jur=valor_jur
         self.valor_total=valor_total
+        self.autenticacao=autenticacao
 
         ComprovantePagto.compCount +=1
 
@@ -73,10 +76,10 @@ class ComprovantePagto:
         print("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n")
 
         #print("CICLO:   ",ciclo," \nREALIZADO EM:  as  \nAG.0000 Nome Agencia \n")
-        print("CICLO:  %s \nREALIZADO EM: %s as  \nAG.0000 Nome Agencia \n" % (ciclo, self.data_pagto.strftime("%d/%m/%Y")))
+        print("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.0000 Nome Agencia \n" % (ciclo, self.data_pagto.strftime("%d/%m/%Y"),self.horaPagto))
 
-        print("\t\t\t AUTENTICACAO \n000000000000000000000000000 \n")
-        print(self.banco[3]," 806248887   ",self.data_pagto.strftime("%d%m%y"),"   ",locale.format("%1.2f", self.valor_total, 1),"   ",self.tipoGuia[1]+"DIN")
+        print("\t\t\t AUTENTICACAO \n%s \n" %(self.autenticacao[2:40].upper()))
+        print(self.banco[3],"806248887   ",self.data_pagto.strftime("%d%m%y"),"   ",locale.format("%1.2f", self.valor_total, 1),"   ",self.tipoGuia[1]+"DIN")
 
 
         #print(info['currency_symbol'],locale.format("%1.2f",self.valor_principal,1))
@@ -320,11 +323,12 @@ def SistemaAutenticacao():
                                             hora = str(random.choice(range(10, 16)))
                                             minuto = "{:0>2d}".format(random.choice(range(0, 59)))
                                             segundo = "{:0>2d}".format(random.choice(range(0, 59)))
-                                            horarioPagto=("%s:%s:%s" %(hora, minuto, segundo))
+                                            horaPagto=("%s:%s:%s" %(hora, minuto, segundo))
+                                            HorarioUltimoPagto=horaPagto
                                         else:
-                                            pass
-
-
+                                            #horaPagto=time.strftime("%I:%M:%S",time.localtime(hoje.toordinal()))
+                                            horaPagto=str("%d:%d:%d" %(hoje.hour,hoje.minute,hoje.second))
+                                            HorarioUltimoPagto = horaPagto
                                         #fim acertando hora de pagto
 
                                         DataVencimento = datetime.datetime.strptime(EntradaDataVencimento, "%d/%m/%Y")
@@ -340,10 +344,13 @@ def SistemaAutenticacao():
 
                                         ValorArrecadado = ValorPrincipal + ValorOutrasEnt + ValorJurosMulta
 
+                                        autenticacao=(str(binascii.b2a_hex(os.urandom(20))))
+
                                         pagamentoN = ComprovantePagto(bancoSelecionado, guiaSelecionada, "2100",
-                                                                      DataVencimento, DataPgto, competencia,
+                                                                      DataVencimento, DataPgto,horaPagto, competencia,
                                                                       identificador, ValorPrincipal,
-                                                                      ValorOutrasEnt, ValorJurosMulta, ValorArrecadado)
+                                                                      ValorOutrasEnt, ValorJurosMulta, ValorArrecadado,
+                                                                      autenticacao)
 
                                         ciclo = pagamentoN.Ciclo()
 
