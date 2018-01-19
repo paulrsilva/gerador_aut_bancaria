@@ -17,8 +17,6 @@ import os.path
 from contextlib import closing
 
 import tempfile
-import win32api
-import win32print
 
 import time, calendar, datetime, random, locale
 
@@ -28,7 +26,6 @@ from _datetime import datetime as dt
 
 HorarioBancario=('10:00','16:00')
 HorarioUltimoPagto=0
-
 
 class ComprovantePagto:
     'classe comum para todos os pagamentos'
@@ -59,11 +56,9 @@ class ComprovantePagto:
         ciclo=self.competencia.strftime("%d.%m.%Y")+identificador
         return ciclo
 
-
     def displayCount(self):
         print("Total de Pagamentos %d" % ComprovantePagto.compCount)
         return ComprovantePagto.compCount
-
 
     def GeraRecibo(self,ciclo):
         recibo=open("recibo.tmp","w")
@@ -83,14 +78,10 @@ class ComprovantePagto:
         recibo.write("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n\n")
         recibo.write("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.%s %s \n\n" % (
             ciclo, self.data_pagto.strftime("%d/%m/%Y"), self.horaPagto, self.agenciaPagto[4], self.agenciaPagto[5]))
-
         recibo.write("\t\t\t AUTENTICACAO \n%s \n\n" % (self.autenticacao[2:40].upper()))
-
         recibo.write("%s %s   %s   %s   %s   %s\n\n" %(self.banco[3],self.agenciaPagto[4][0:4],"806248887",self.data_pagto.strftime("%d%m%y"),
                                            locale.format("%1.2f", self.valor_total, 1),self.tipoGuia[1] + "DIN"))
-
         recibo.close()
-
 
     def MostraRecibo(self,ciclo):
         locale.setlocale(locale.LC_ALL, "")
@@ -108,14 +99,11 @@ class ComprovantePagto:
               "\nVALOR ARRECADADO: ", info['currency_symbol'], locale.format("%1.2f", self.valor_total, 1),"\n")
         print("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n")
 
-        #print("CICLO:   ",ciclo," \nREALIZADO EM:  as  \nAG.0000 Nome Agencia \n")
         print("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.%s %s \n" % (ciclo, self.data_pagto.strftime("%d/%m/%Y"),self.horaPagto,self.agenciaPagto[4],self.agenciaPagto[5]))
 
         print("\t\t\t AUTENTICACAO \n%s \n" %(self.autenticacao[2:40].upper()))
         print(self.banco[3],"806248887   ",self.data_pagto.strftime("%d%m%y"),"   ",locale.format("%1.2f", self.valor_total, 1),"   ",self.tipoGuia[1]+"DIN")
 
-
-        #print(info['currency_symbol'],locale.format("%1.2f",self.valor_principal,1))
         print('\n----------//-------------\n')
         while True:
             entradaRecibo=input("[A]rquivar | [I]mprimir | [S]air :")
@@ -123,34 +111,26 @@ class ComprovantePagto:
                 pass
             elif(entradaRecibo.lower()=='i'):
                 #ComprovantePagto.GeraRecibo(self)
-
                 os.startfile("recibo.tmp", "print")
-
             elif(entradaRecibo.lower()=='s'):
                 break
             else:
                 print("Digite A, I ou S\n")
 
-
-
-
 bancos = [ ("001", "Banco do Brasil S.A.", "BB"),
            ("104","Caixa Econômica Federal", "CE"),
            ("033","Banco Santander (Brasil) S.A.","SBR"),
            ("341","Itaú Unibanco S.A.","ITAU")
-
 ]
 
 tiposDeGuia = [("GPS", "Guia de Previdência Social"),
                ("GRU", "Guia de Recolhimendo da União" )
 ]
 
-
 agencias = [ ("BB","RJ","Petropolis","0080", "PETROPOLIS PETROPOLIS"),
              ("CE", "RJ", "Petropolis", "1651", "PETROPOLIS UNIAO"),
              ("SBR", "RJ", "Petropolis", "3242", "PETROPOLIS-CENTRO"),
              ("ITAU","RJ","Petropolis","0087","PETROPOLIS UNIAO")
-
 ]
 
 def pegaNetInfo():
@@ -168,14 +148,12 @@ def pegaNetInfo():
 
     return ipLocal, ipRouter, ipExterno
 
-
 def verificaBD():
     if (os.path.exists('bancos.db')):
         return True
     else:
         conn = sqlite3.connect("bancos.db")
         cursor = conn.cursor()
-
 
         cursor.execute ('''
                 create TABLE bancos(
@@ -238,7 +216,6 @@ def verificaTabelaDB(dbcon, tablename):
     dbcur.close()
     return False
 
-
 def consultaBanco(codBanco):
     # pegando a lista de todos os bancos
     # ou pegando um banco específico
@@ -273,16 +250,6 @@ def consultaBanco(codBanco):
 
 def consultaAgencia(sigla_banco):
     #TODO Desenvolver inclusão e consulta de agencias adicionais
-    '''
-    with sqlite3.connect("bancos.db") as conn:
-        with closing(conn.cursor()) as cursor:
-            cursor.execute("SELECT * FROM agencias WHERE banco=%s" % sigla_banco)
-            resultado=cursor.fetchone()
-            if resultado != None:
-                return resultado
-            else:
-                return False
-    '''
 
     conn = sqlite3.connect('bancos.db')
     cursor=conn.cursor()
@@ -295,7 +262,6 @@ def consultaAgencia(sigla_banco):
         else:
             print('Não existe AG. para o Banco Selecionado\n')
             entradaAgencia=input("Adicionar Agencia?")
-
 
 def consultaGuia(guia):
     conn = sqlite3.connect('bancos.db')
