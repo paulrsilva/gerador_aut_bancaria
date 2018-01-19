@@ -5,9 +5,9 @@ missing module named _winreg - imported by platform, /Users/paul/development/Nan
 missing module named java - imported by platform, /Users/paul/development/Nando/bancos/gerador.py
 missing module named 'java.lang' - imported by platform, /Users/paul/development/Nando/bancos/gerador.py, xml.sax._exceptions
 missing module named vms_lib - imported by platform, /Users/paul/development/Nando/bancos/gerador.py
-missing module named msvcrt - imported by subprocess, /Users/paul/development/Nando/bancos/gerador.py, getpass
-missing module named _winapi - imported by subprocess, /Users/paul/development/Nando/bancos/gerador.py
 missing module named winreg - imported by platform, mimetypes, /Users/paul/development/Nando/bancos/gerador.py, urllib.request
 missing module named nt - imported by os, ntpath, shutil, /Users/paul/development/Nando/bancos/gerador.py
-missing module named org - imported by copy, /Users/paul/development/Nando/bancos/gerador.py
+missing module named msvcrt - imported by subprocess, /Users/paul/development/Nando/bancos/gerador.py, getpass
+missing module named _winapi - imported by subprocess, /Users/paul/development/Nando/bancos/gerador.py
 missing module named _dummy_threading - imported by dummy_threading, /Users/paul/development/Nando/bancos/gerador.py
+missing module named org - imported by copy, /Users/paul/development/Nando/bancos/gerador.py
