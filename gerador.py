@@ -30,6 +30,7 @@ HorarioUltimoPagto=0
 class ComprovantePagto:
     'classe comum para todos os pagamentos'
     compCount = 0
+    NumUltimaAutenticacao=None
 
     def __init__(self, banco, agenciaPagto, tipoGuia, codigo, data_venc, data_pagto, horaPagto, competencia, identificador, valor_principal,
                  valor_outras_ent, valor_jur, valor_total, autenticacao):
@@ -61,7 +62,7 @@ class ComprovantePagto:
         return ComprovantePagto.compCount
 
     def GeraRecibo(self,ciclo):
-        recibo=open("recibo.tmp","w")
+        recibo=open("recibo.txt","w")
 
         locale.setlocale(locale.LC_ALL, "")
         info = locale.localeconv()  # formatando moeda local
@@ -77,11 +78,30 @@ class ComprovantePagto:
         recibo.write("VALOR ARRECADADO: %s %s\n\n" %( info['currency_symbol'], locale.format("%1.2f", self.valor_total, 1)))
         recibo.write("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n\n")
         recibo.write("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.%s %s \n\n" % (
-            ciclo, self.data_pagto.strftime("%d/%m/%Y"), self.horaPagto, self.agenciaPagto[4], self.agenciaPagto[5]))
+            ciclo, self.data_pagto.strftime("%d/%m/%Y"), self.horaPagto, self.agenciaPagto[4][0:4], self.agenciaPagto[5]))
         recibo.write("\t\t\t AUTENTICACAO \n%s \n\n" % (self.autenticacao[2:40].upper()))
-        recibo.write("%s %s   %s   %s   %s   %s\n\n" %(self.banco[3],self.agenciaPagto[4][0:4],"806248887",self.data_pagto.strftime("%d%m%y"),
+        recibo.write("%s %s   %s   %s   %sC   %s\n\n" %(self.banco[3],self.agenciaPagto[4][0:4],"806248887",self.data_pagto.strftime("%d%m%y"),
                                            locale.format("%1.2f", self.valor_total, 1),self.tipoGuia[1] + "DIN"))
         recibo.close()
+
+
+    def GeraNumAutenticacao(self):
+        if(self.NumUltimaAutenticacao==None):
+            numInicial = ("%s%s" % ("0", str(self.banco[0])))
+            numFinal = "{:0>2d}".format(random.randint(1, 10))
+            NumAleatorio = ("%s%s" % (numInicial, numFinal))
+            self.NumUltimaAutenticacao=NumAleatorio
+            return NumAleatorio
+        else:
+            numAutentica=int(self.NumUltimaAutenticacao)+1
+            numAut="{:0>4d}".format(numAutentica)
+            self.NumUltimaAutenticacao = numAut
+            return numAut
+
+
+    def MostraAutenticacao(self):
+        return("\n%s  %s  %s  %s  %s \t  %sR %s" % (self.banco[3],self.agenciaPagto[4][0:4],self.banco[1],self.data_pagto.strftime("%d%m%y"),self.GeraNumAutenticacao(),
+                                             str(self.valor_total).replace(".",","),self.data_venc.strftime("%d/%d")))
 
     def MostraRecibo(self,ciclo):
         locale.setlocale(locale.LC_ALL, "")
@@ -110,7 +130,7 @@ class ComprovantePagto:
             if(entradaRecibo.lower()=='a'):
                 pass
             elif(entradaRecibo.lower()=='i'):
-                #ComprovantePagto.GeraRecibo(self)
+                self.GeraRecibo(self.Ciclo())
                 os.startfile("recibo.tmp", "print")
             elif(entradaRecibo.lower()=='s'):
                 break
@@ -296,9 +316,9 @@ def consultaData(data):
         diaPagto = datetime.datetime.strptime(data,"%d/%m/%Y")
 
         diaDaSemana=diaPagto.strftime("%A")
-        dataPagto=diaPagto.strftime("%d/%m%/%Y")
+        #dataPagto=diaPagto.strftime("%d/%m%/%Y")
 
-        return (diaDaSemana,dataPagto)
+        return(diaDaSemana)
 
 
 #Função para calcular o mes anterior - Competencia
@@ -353,7 +373,8 @@ def SistemaAutenticacao():
                                 elif(EntradaData.lower()=='q'):
                                     _run=False
                                 else:
-                                    diaDaSemana, dataPagto = consultaData(EntradaData)
+                                    diaDaSemana=consultaData(EntradaData)
+                                    dataPagto=EntradaData
                                     if (diaDaSemana == "Saturday"):
                                         print("Esta data cai num Sábado")
                                     elif (diaDaSemana == "Sunday"):
@@ -425,7 +446,19 @@ def SistemaAutenticacao():
                                                 pagamentoN.GeraRecibo(ciclo)
                                                 pagamentoN.MostraRecibo(ciclo)
                                             elif (EntradaImpressao.lower() == 'a'):
-                                                print("\n\nAUTENTICACAO 999999 999999 999999999 99999999999999999 99999999")
+                                                print("\n\n %s" %pagamentoN.MostraAutenticacao())
+                                                entradaAutOpcoes=input("[I]mprimir | [A]rquivar | [S]air")
+                                                while True:
+                                                    if(entradaAutOpcoes.lower()=='i'):
+                                                        os.startfile("\n\n %s" %pagamentoN.MostraAutenticacao(), "print")
+                                                        pass
+                                                    elif(entradaAutOpcoes.lower()=='a'):
+                                                        pass
+                                                    elif(entradaAutOpcoes.lower()=='s'):
+                                                        break
+                                                    else:
+                                                        pass
+
                                             elif (EntradaImpressao.lower()=='v'):
                                                 break
                                             elif (EntradaImpressao.lower()=='q'):
