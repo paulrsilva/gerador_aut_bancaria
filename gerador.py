@@ -7,9 +7,6 @@ Copyright (c) 2017 neoplace. All rights reserved.
 
 import sys
 import os
-import socket
-import urllib
-import re
 import binascii
 
 import sqlite3
@@ -22,10 +19,12 @@ import time, calendar, datetime, random, locale
 
 from _datetime import datetime as dt
 
-# import netifaces
+
+#Importando Módulo para Operações de Rede Adicionais
+import ferramentasderede
 
 HorarioBancario=('10:00','16:00')
-HorarioUltimoPagto=0
+# HorarioUltimoPagto=0 - Definida como Global em SistemaAutenticacao
 
 class ComprovantePagto:
     'classe comum para todos os pagamentos'
@@ -153,20 +152,7 @@ agencias = [ ("BB","RJ","Petropolis","0080", "PETROPOLIS PETROPOLIS"),
              ("ITAU","RJ","Petropolis","0087","PETROPOLIS UNIAO")
 ]
 
-def pegaNetInfo():
-    #pegando o ip local
-    ipLocal = socket.gethostbyname(socket.gethostname())
 
-    # pegando o IP do Router
-
-    ipRouter = '0.0.0.0'
-
-    # pegando o IP público
-    site = urllib.urlopen("http://checkip.dyndns.org/").read()
-    grab = re.findall('([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)', site)
-    ipExterno = grab[0]
-
-    return ipLocal, ipRouter, ipExterno
 
 def verificaBD():
     if (os.path.exists('bancos.db')):
@@ -331,6 +317,7 @@ def monthdelta(date, delta):
 
 #Sistema Principal de Autenticacao
 def SistemaAutenticacao():
+    global HorarioUltimoPagto
     print("\n *** Sistema de Autenticações Bancárias. Digite q para sair *** \n")
     _run = True
     while _run:
@@ -432,11 +419,18 @@ def SistemaAutenticacao():
                                         #agenciaPagto=consultaGuia(bancoSelecionado[3])
                                         agenciaPagto=consultaAgencia(bancoSelecionado[3])
 
-                                        pagamentoN = ComprovantePagto(bancoSelecionado,agenciaPagto, guiaSelecionada, "2100",
-                                                                      DataVencimento, DataPgto,horaPagto, competencia,
-                                                                      identificador, ValorPrincipal,
-                                                                      ValorOutrasEnt, ValorJurosMulta, ValorArrecadado,
-                                                                      autenticacao)
+                                        # Criando Dicionario com desempacotamento para facilitar
+                                        # versionamento posterior. Tbem facilita a correção de qualquer
+                                        # erro de posicionamento
+
+                                        d = {"banco": bancoSelecionado, "agenciaPagto": agenciaPagto,
+                                             "tipoGuia": guiaSelecionada, "codigo": "2100", "data_venc": DataVencimento,
+                                             "data_pagto": DataPgto, "horaPagto": horaPagto, "competencia": competencia,
+                                             "identificador": identificador, "valor_principal": ValorPrincipal,
+                                             "valor_outras_ent": ValorOutrasEnt, "valor_jur": ValorJurosMulta,
+                                             "valor_total": ValorArrecadado, "autenticacao": autenticacao}
+
+                                        pagamentoN = ComprovantePagto(**d)
 
 
                                         while True:
