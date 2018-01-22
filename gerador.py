@@ -21,7 +21,9 @@ from _datetime import datetime as dt
 
 
 #Importando Módulo para Operações de Rede Adicionais
-import ferramentasderede
+#import ferramentasderede
+
+#ipLocal,ipRouter,ipExterno=ferramentasderede.pegaNetInfo()
 
 HorarioBancario=('10:00','16:00')
 # HorarioUltimoPagto=0 - Definida como Global em SistemaAutenticacao
