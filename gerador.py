@@ -21,9 +21,9 @@ from _datetime import datetime as dt
 
 
 #Importando Módulo para Operações de Rede Adicionais
-#import ferramentasderede
+import ferramentasderede as nt
 
-#ipLocal,ipRouter,ipExterno=ferramentasderede.pegaNetInfo()
+ipLocal,ipRouter,ipExterno=nt.bogusNet()
 
 HorarioBancario=('10:00','16:00')
 # HorarioUltimoPagto=0 - Definida como Global em SistemaAutenticacao
@@ -280,21 +280,33 @@ def consultaGuia(guia):
         for guia in resultado:
             print("Id: %d - Sigla: %s - Tipo: %s" %(guia))
     else:
-        indiceGuia=int(guia)
-        cursor.execute("SELECT * from guias WHERE id=%d" % indiceGuia)
-        while True:
-            resultado=cursor.fetchone()
-            if resultado != None:
-                print("Id: %d - Sigla: %s - Inst.: %s" %(resultado))
-                return resultado
-                break
-            else:
-                print('Cod. Guia não encontrado. \n')
-                entradaAdGuia=input("Adidionar Guia?")
+        try:
+            indiceGuia=int(guia)
+            cursor.execute("SELECT * from guias WHERE id=%d" % indiceGuia)
+            while True:
+                resultado=cursor.fetchone()
+                if resultado != None:
+                    print("Id: %d - Sigla: %s - Inst.: %s" %(resultado))
+                    return resultado
+                    break
+                else:
+                    print('Cod. Guia não encontrado. \n')
+                    entradaAdGuia=input("Adidionar Guia? S/N :")
+                    if(entradaAdGuia.lower()=='n'):
+                        break
+                    elif(entradaAdGuia.lower()=='s'):
+                        print('Codigo para adicionar guia não implementado')
+                    else:
+                        print("digite apenas S ou N")
+        except ValueError:
+            print("Entrada de dados inválida. É preciso inserir o nº da guia.")
+
+
 
 def consultaData(data):
     if (len(data)<10 or len(data)>10):
         print('a data deve ter o formado dd/mm/aaaa')
+        return False
     else:
         #linhaData=data.split("/")
         #for linha in linhaData:
@@ -354,6 +366,7 @@ def SistemaAutenticacao():
                                     break
                                 else:
                                     pass
+
                                 EntradaData = input("%s | %s | Dig. a Data de Pgto ('v' para voltar):" % (
                                 bancoSelecionado[3], guiaSelecionada[1]))
                                 # TODO Criar classe de cálculo de juro e mora
@@ -362,8 +375,19 @@ def SistemaAutenticacao():
                                 elif(EntradaData.lower()=='q'):
                                     _run=False
                                 else:
-                                    diaDaSemana=consultaData(EntradaData)
+                                    #Verificando se o formato de data está ok
+                                    if(consultaData(EntradaData)):
+                                        diaDaSemana=consultaData(EntradaData)
+                                    else:
+                                        print('Formato de Data Invalido')
+                                        break
+
                                     dataPagto=EntradaData
+
+                                    if(consultaData(dataPagto)==False):
+                                        print('Formato de Data Invalido')
+                                        break
+
                                     if (diaDaSemana == "Saturday"):
                                         print("Esta data cai num Sábado")
                                     elif (diaDaSemana == "Sunday"):
@@ -371,18 +395,33 @@ def SistemaAutenticacao():
                                     # TODO Fazer aferição de feriados
                                     # TODO Acertar nova data automaticamente
                                     else:
-                                        ValorPrincipal = float(input("%s | %s | %s | Valor Principal :" % (
-                                        bancoSelecionado[3], guiaSelecionada[1], dataPagto)))
-                                        ValorOutrasEnt = float(input(
-                                            "%s | %s | %s | Outras Ent :" % (
-                                                bancoSelecionado[3], guiaSelecionada[1], dataPagto)))
+                                        try:
+                                            ValorPrincipal = float(input("%s | %s | %s | Valor Principal :" % (
+                                            bancoSelecionado[3], guiaSelecionada[1], dataPagto)))
+                                        except ValueError:
+                                            print("Os decimais devem ser separados com ponto '.'")
+                                            print("Apenas números são permitidos")
+                                            break
+
+                                        try:
+                                            ValorOutrasEnt = float(input(
+                                                "%s | %s | %s | Outras Ent :" % (
+                                                    bancoSelecionado[3], guiaSelecionada[1], dataPagto)))
+                                        except ValueError:
+                                            print("Os decimais devem ser separados com ponto '.'")
+                                            print("Apenas números são permitidos")
+                                            break
 
                                         # TODO criar avaliação de entrada para campos sem nenhum informação (APENAS ENTER)
 
-                                        ValorJurosMulta = float(input(
+                                        try:
+                                            ValorJurosMulta = float(input(
                                             "%s | %s | %s | ATM/JUR/MULTAS :" % (
                                                 bancoSelecionado[3], guiaSelecionada[1], dataPagto)))
-
+                                        except ValueError:
+                                            print("Os decimais devem ser separados com ponto '.'")
+                                            print("Apenas números são permitidos")
+                                            break
                                         #d=datetime.datetime.strptime(DataVencimento, "%d/%m/%Y")
 
                                         #acertando a hora de pagamento
