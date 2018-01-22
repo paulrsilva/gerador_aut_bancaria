@@ -12,10 +12,11 @@ import binascii
 import sqlite3
 import os.path
 from contextlib import closing
+import locale
 
 import tempfile
 
-import time, calendar, datetime, random, locale
+import time, calendar, datetime, random
 
 from _datetime import datetime as dt
 
@@ -65,24 +66,34 @@ class ComprovantePagto:
     def GeraRecibo(self,ciclo):
         recibo=open("recibo.txt","w")
 
-        locale.setlocale(locale.LC_ALL, "")
+        locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
         info = locale.localeconv()  # formatando moeda local
+        siglaMoeda = info['currency_symbol']
         recibo.write("\n%s              \n\n" %(self.banco[2].upper()))
         recibo.write("COMPROVANTE DE PAGAMENTO DE %s \n\n" % self.tipoGuia[2].upper())
         recibo.write("DADOS DO EMITENTE \nNOME: \nCPF/CNPJ: 00000000000000  \n\n")
         recibo.write("CODIGO DO PAGAMENTO:  %s\n" % self.codigo)
         recibo.write("COMPETENCIA:  %s\n" % self.competencia.strftime("%m/%Y"))
         recibo.write("IDENTIFICADOR:  %s\n\n" % self.identificador)
-        recibo.write("VALOR PRINCIPAL:  %s %s \n\n" %( info['currency_symbol'], locale.format("%1.2f", self.valor_principal, 1)))
-        recibo.write("VALOR DE OUTRAS ENT: %s %s\n" %( info['currency_symbol'], locale.format("%1.2f", self.valor_outras_ent, 1)))
-        recibo.write("VALOR DO ATM/JUR/MULT: %s %s\n" %(info['currency_symbol'], locale.format("%1.2f", self.valor_jur, 1)))
-        recibo.write("VALOR ARRECADADO: %s %s\n\n" %( info['currency_symbol'], locale.format("%1.2f", self.valor_total, 1)))
+
+        recibo.write("VALOR PRINCIPAL:  %s %s \n\n" %( siglaMoeda, locale.currency(self.valor_principal, grouping=True, symbol=None)))
+        if(self.valor_outras_ent==0):
+            recibo.write("VALOR DE OUTRAS ENT: %s \n" % (siglaMoeda))
+        else:
+            recibo.write("VALOR DE OUTRAS ENT: %s %s\n" %( siglaMoeda, locale.currency(self.valor_outras_ent, grouping=True, symbol=None)))
+
+        if(self.valor_jur==0):
+            recibo.write("VALOR DO ATM/JUR/MULT: %s \n" % (siglaMoeda))
+        else:
+            recibo.write("VALOR DO ATM/JUR/MULT: %s %s\n" %(siglaMoeda, locale.currency(self.valor_jur, grouping=True, symbol=None)))
+
+        recibo.write("VALOR ARRECADADO: %s %s\n\n" %( siglaMoeda, locale.currency(self.valor_total, grouping=True, symbol=None)))
         recibo.write("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n\n")
         recibo.write("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.%s %s \n\n" % (
             ciclo, self.data_pagto.strftime("%d/%m/%Y"), self.horaPagto, self.agenciaPagto[4][0:4], self.agenciaPagto[5]))
         recibo.write("\t\t\t AUTENTICACAO \n%s \n\n" % (self.autenticacao[2:40].upper()))
         recibo.write("%s %s   %s   %s   %sC   %s\n\n" %(self.banco[3],self.agenciaPagto[4][0:4],"806248887",self.data_pagto.strftime("%d%m%y"),
-                                           locale.format("%1.2f", self.valor_total, 1),self.tipoGuia[1] + "DIN"))
+                                                        locale.currency(self.valor_total, grouping=True, symbol=None),self.tipoGuia[1] + "DIN"))
         recibo.close()
 
 
@@ -105,34 +116,45 @@ class ComprovantePagto:
                                              str(self.valor_total).replace(".",","),self.data_venc.strftime("%d/%d")))
 
     def MostraRecibo(self,ciclo):
-        locale.setlocale(locale.LC_ALL, "")
+        locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
         info = locale.localeconv()  # formatando moeda local
-        print("\n\n")
-        print(self.banco[2].upper(),"              \n")
-        print("COMPROVANTE DE PAGAMENTO DE", self.tipoGuia[2].upper(), "\n")
-        print("DADOS DO EMITENTE \nNOME: \nCPF/CNPJ: 00000000000000  \n")
-        print("CODIGO DO PAGAMENTO:  ", self.codigo)
-        print("COMPETENCIA:  ",self.competencia.strftime("%m/%Y"))
-        print( "IDENTIFICADOR:  ",self.identificador,"\n")
-        print("VALOR PRINCIPAL:  ",info['currency_symbol'],locale.format("%1.2f",self.valor_principal,1),"\n")
-        print("VALOR DE OUTRAS ENT: ",info['currency_symbol'],locale.format("%1.2f",self.valor_outras_ent,1),
-              "\nVALOR DO ATM/JUR/MULT:",info['currency_symbol'],locale.format("%1.2f",self.valor_jur,1),
-              "\nVALOR ARRECADADO: ", info['currency_symbol'], locale.format("%1.2f", self.valor_total, 1),"\n")
-        print("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n")
+        siglaMoeda = info['currency_symbol']
+        print("\n%s              \n" % (self.banco[2].upper()))
+        print("COMPROVANTE DE PAGAMENTO DE %s \n" % self.tipoGuia[2].upper())
+        print("DADOS DO EMITENTE \nNOME: \nCPF/CNPJ: 00000000000000  \n\n")
+        print("CODIGO DO PAGAMENTO:  %s\nCOMPETENCIA:  %s\nIDENTIFICADOR:  %s\n " % (self.codigo,self.competencia.strftime("%m/%Y"),self.identificador))
 
-        print("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.%s %s \n" % (ciclo, self.data_pagto.strftime("%d/%m/%Y"),self.horaPagto,self.agenciaPagto[4],self.agenciaPagto[5]))
+        print("VALOR PRINCIPAL:  %s %s \n" % (
+        siglaMoeda, locale.currency(self.valor_principal, grouping=True, symbol=None)))
 
-        print("\t\t\t AUTENTICACAO \n%s \n" %(self.autenticacao[2:40].upper()))
-        print(self.banco[3],"806248887   ",self.data_pagto.strftime("%d%m%y"),"   ",locale.format("%1.2f", self.valor_total, 1),"   ",self.tipoGuia[1]+"DIN")
+        if (self.valor_outras_ent == 0):
+            print("VALOR DE OUTRAS ENT: %s \n" % (siglaMoeda))
+        else:
+            print("VALOR DE OUTRAS ENT: %s %s\n" % (
+            siglaMoeda, locale.currency(self.valor_outras_ent, grouping=True, symbol=None)))
 
-        print('\n----------//-------------\n')
+        if (self.valor_jur == 0):
+            print("VALOR DO ATM/JUR/MULT: %s \n" % (siglaMoeda))
+        else:
+            print("VALOR DO ATM/JUR/MULT: %s %s\n" % (
+            siglaMoeda, locale.currency(self.valor_jur, grouping=True, symbol=None)))
+
+        print("VALOR ARRECADADO: %s %s\n\n" % (siglaMoeda, locale.currency(self.valor_total, grouping=True, symbol=None)))
+        print("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n\n")
+        print("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.%s %s \n\n" % (
+            ciclo, self.data_pagto.strftime("%d/%m/%Y"), self.horaPagto, self.agenciaPagto[4][0:4],
+            self.agenciaPagto[5]))
+        print("\t\t\t AUTENTICACAO \n%s \n\n" % (self.autenticacao[2:40].upper()))
+        print("%s %s   %s   %s   %sC   %s\n\n" % (self.banco[3], self.agenciaPagto[4][0:4], "806248887",
+                                                  self.data_pagto.strftime("%d%m%y"),locale.currency(self.valor_total,
+                                                  grouping=True, symbol=None), self.tipoGuia[1] + "DIN"))
         while True:
             entradaRecibo=input("[A]rquivar | [I]mprimir | [S]air :")
             if(entradaRecibo.lower()=='a'):
                 pass
             elif(entradaRecibo.lower()=='i'):
                 self.GeraRecibo(self.Ciclo())
-                os.startfile("recibo.tmp", "print")
+                os.startfile("recibo.txt", "print")
             elif(entradaRecibo.lower()=='s'):
                 break
             else:
@@ -320,6 +342,15 @@ def consultaData(data):
 
         return(diaDaSemana)
 
+#Função para verificar entrada de valores float
+def input_float(entrada):
+    while True:
+        try:
+            return (float(entrada))
+        except ValueError:
+            print("Os decimais devem ser separados com ponto '.'")
+            print("Apenas números são permitidos")
+
 
 #Função para calcular o mes anterior - Competencia
 def monthdelta(date, delta):
@@ -395,33 +426,22 @@ def SistemaAutenticacao():
                                     # TODO Fazer aferição de feriados
                                     # TODO Acertar nova data automaticamente
                                     else:
-                                        try:
-                                            ValorPrincipal = float(input("%s | %s | %s | Valor Principal :" % (
-                                            bancoSelecionado[3], guiaSelecionada[1], dataPagto)))
-                                        except ValueError:
-                                            print("Os decimais devem ser separados com ponto '.'")
-                                            print("Apenas números são permitidos")
-                                            break
 
-                                        try:
-                                            ValorOutrasEnt = float(input(
-                                                "%s | %s | %s | Outras Ent :" % (
-                                                    bancoSelecionado[3], guiaSelecionada[1], dataPagto)))
-                                        except ValueError:
-                                            print("Os decimais devem ser separados com ponto '.'")
-                                            print("Apenas números são permitidos")
-                                            break
+                                        ValorPrincipal=input_float(input("%s | %s | %s | Valor Principal :" % (
+                                            bancoSelecionado[3], guiaSelecionada[1], dataPagto))
+                                                                   )
+                                        ValorOutrasEnt=input_float(input(
+                                            "%s | %s | %s | Outras Ent :" % (
+                                                bancoSelecionado[3], guiaSelecionada[1], dataPagto))
+                                        )
 
                                         # TODO criar avaliação de entrada para campos sem nenhum informação (APENAS ENTER)
 
-                                        try:
-                                            ValorJurosMulta = float(input(
-                                            "%s | %s | %s | ATM/JUR/MULTAS :" % (
-                                                bancoSelecionado[3], guiaSelecionada[1], dataPagto)))
-                                        except ValueError:
-                                            print("Os decimais devem ser separados com ponto '.'")
-                                            print("Apenas números são permitidos")
-                                            break
+                                        ValorJurosMulta = input_float(input(
+                                            "%s | %s | %s | ATM/JUR/MULTAS : " % (
+                                                bancoSelecionado[3], guiaSelecionada[1], dataPagto))
+                                        )
+
                                         #d=datetime.datetime.strptime(DataVencimento, "%d/%m/%Y")
 
                                         #acertando a hora de pagamento
