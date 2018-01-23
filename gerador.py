@@ -57,18 +57,17 @@ class SistemaUsuario:
             os.startfile("recibo.txt", "print")
         else:
             print("Sistema Operacional Desconhecido")
-    def imprima(self,*args):
-        texto=str
-        for linha in args:
-            texto=texto+linha
-        return texto
+    def checa_sistema(self):
+        return self.plataforma.lower()
 
 class ComprovantePagto:
     'classe comum para todos os pagamentos'
     compCount = 0
     NumUltimaAutenticacao=None
 
-    usuario=SistemaUsuario
+    usuario=SistemaUsuario()
+
+    print(usuario.checa_sistema())
 
     # criando um objeto com as caracteristicas do computador do usuario
     # para impressão e manipulação correta de arquivos
@@ -105,6 +104,8 @@ class ComprovantePagto:
 
 
     def GeraRecibo(self,ciclo):
+
+
         recibo=open("recibo.txt","w")
 
         locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
