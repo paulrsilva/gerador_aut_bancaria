@@ -31,7 +31,7 @@ ipLocal,ipRouter,ipExterno=nt.bogusNet()
 HorarioBancario=('10:00','16:00')
 # HorarioUltimoPagto=0 - Definida como Global em SistemaAutenticacao
 
-
+SistemaOperacional = platform.system()
 
 #Classe para identificacao do Sistema Operacional e Metodos de Operação e Impressao
 class SistemaUsuario:
@@ -67,7 +67,7 @@ class ComprovantePagto:
 
     usuario=SistemaUsuario()
 
-    print(usuario.checa_sistema())
+    #print(usuario.checa_sistema())
 
     # criando um objeto com as caracteristicas do computador do usuario
     # para impressão e manipulação correta de arquivos
@@ -105,38 +105,38 @@ class ComprovantePagto:
 
     def GeraRecibo(self,ciclo):
 
+        if(SistemaOperacional.lower()=="darwin"):
+            recibo=open("recibo.txt","w")
 
-        recibo=open("recibo.txt","w")
+            locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
+            info = locale.localeconv()  # formatando moeda local
+            siglaMoeda = info['currency_symbol']
+            recibo.write("\n%s              \n\n" %(self.banco[2].upper()))
+            recibo.write("COMPROVANTE DE PAGAMENTO DE %s \n\n" % self.tipoGuia[2].upper())
+            recibo.write("DADOS DO EMITENTE \nNOME: \nCPF/CNPJ: 00000000000000  \n\n")
+            recibo.write("CODIGO DO PAGAMENTO:  %s\n" % self.codigo)
+            recibo.write("COMPETENCIA:  %s\n" % self.competencia.strftime("%m/%Y"))
+            recibo.write("IDENTIFICADOR:  %s\n\n" % self.identificador)
 
-        locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
-        info = locale.localeconv()  # formatando moeda local
-        siglaMoeda = info['currency_symbol']
-        recibo.write("\n%s              \n\n" %(self.banco[2].upper()))
-        recibo.write("COMPROVANTE DE PAGAMENTO DE %s \n\n" % self.tipoGuia[2].upper())
-        recibo.write("DADOS DO EMITENTE \nNOME: \nCPF/CNPJ: 00000000000000  \n\n")
-        recibo.write("CODIGO DO PAGAMENTO:  %s\n" % self.codigo)
-        recibo.write("COMPETENCIA:  %s\n" % self.competencia.strftime("%m/%Y"))
-        recibo.write("IDENTIFICADOR:  %s\n\n" % self.identificador)
+            recibo.write("VALOR PRINCIPAL:  %s %s \n\n" %( siglaMoeda, locale.currency(self.valor_principal, grouping=True, symbol=None)))
+            if(self.valor_outras_ent==0):
+                recibo.write("VALOR DE OUTRAS ENT: %s \n" % (siglaMoeda))
+            else:
+                recibo.write("VALOR DE OUTRAS ENT: %s %s\n" %( siglaMoeda, locale.currency(self.valor_outras_ent, grouping=True, symbol=None)))
 
-        recibo.write("VALOR PRINCIPAL:  %s %s \n\n" %( siglaMoeda, locale.currency(self.valor_principal, grouping=True, symbol=None)))
-        if(self.valor_outras_ent==0):
-            recibo.write("VALOR DE OUTRAS ENT: %s \n" % (siglaMoeda))
-        else:
-            recibo.write("VALOR DE OUTRAS ENT: %s %s\n" %( siglaMoeda, locale.currency(self.valor_outras_ent, grouping=True, symbol=None)))
+            if(self.valor_jur==0):
+                recibo.write("VALOR DO ATM/JUR/MULT: %s \n" % (siglaMoeda))
+            else:
+                recibo.write("VALOR DO ATM/JUR/MULT: %s %s\n" %(siglaMoeda, locale.currency(self.valor_jur, grouping=True, symbol=None)))
 
-        if(self.valor_jur==0):
-            recibo.write("VALOR DO ATM/JUR/MULT: %s \n" % (siglaMoeda))
-        else:
-            recibo.write("VALOR DO ATM/JUR/MULT: %s %s\n" %(siglaMoeda, locale.currency(self.valor_jur, grouping=True, symbol=None)))
-
-        recibo.write("VALOR ARRECADADO: %s %s\n\n" %( siglaMoeda, locale.currency(self.valor_total, grouping=True, symbol=None)))
-        recibo.write("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n\n")
-        recibo.write("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.%s %s \n\n" % (
-            ciclo, self.data_pagto.strftime("%d/%m/%Y"), self.horaPagto, self.agenciaPagto[4][0:4], self.agenciaPagto[5]))
-        recibo.write("\t\t\t AUTENTICACAO \n%s \n\n" % (self.autenticacao[2:40].upper()))
-        recibo.write("%s %s   %s   %s   %sC   %s\n\n" %(self.banco[3],self.agenciaPagto[4][0:4],"806248887",self.data_pagto.strftime("%d%m%y"),
-                                                        locale.currency(self.valor_total, grouping=True, symbol=None),self.tipoGuia[1] + "DIN"))
-        recibo.close()
+            recibo.write("VALOR ARRECADADO: %s %s\n\n" %( siglaMoeda, locale.currency(self.valor_total, grouping=True, symbol=None)))
+            recibo.write("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n\n")
+            recibo.write("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.%s %s \n\n" % (
+                ciclo, self.data_pagto.strftime("%d/%m/%Y"), self.horaPagto, self.agenciaPagto[4][0:4], self.agenciaPagto[5]))
+            recibo.write("\t\t\t AUTENTICACAO \n%s \n\n" % (self.autenticacao[2:40].upper()))
+            recibo.write("%s %s   %s   %s   %sC   %s\n\n" %(self.banco[3],self.agenciaPagto[4][0:4],"806248887",self.data_pagto.strftime("%d%m%y"),
+                                                            locale.currency(self.valor_total, grouping=True, symbol=None),self.tipoGuia[1] + "DIN"))
+            recibo.close()
 
 
     def GeraNumAutenticacao(self):
@@ -158,39 +158,43 @@ class ComprovantePagto:
                                              str(self.valor_total).replace(".",","),self.data_venc.strftime("%d/%d")))
 
     def MostraRecibo(self,ciclo):
+        if(SistemaOperacional.lower()=="darwin"):
+            locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
+            info = locale.localeconv()  # formatando moeda local
+            siglaMoeda = info['currency_symbol']
+            print("\n%s              \n" % (self.banco[2].upper()))
+            print("COMPROVANTE DE PAGAMENTO DE %s \n" % self.tipoGuia[2].upper())
+            print("DADOS DO EMITENTE \nNOME: \nCPF/CNPJ: 00000000000000  \n\n")
+            print("CODIGO DO PAGAMENTO:  %s\nCOMPETENCIA:  %s\nIDENTIFICADOR:  %s\n " % (self.codigo,self.competencia.strftime("%m/%Y"),self.identificador))
 
-        locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
-        info = locale.localeconv()  # formatando moeda local
-        siglaMoeda = info['currency_symbol']
-        print("\n%s              \n" % (self.banco[2].upper()))
-        print("COMPROVANTE DE PAGAMENTO DE %s \n" % self.tipoGuia[2].upper())
-        print("DADOS DO EMITENTE \nNOME: \nCPF/CNPJ: 00000000000000  \n\n")
-        print("CODIGO DO PAGAMENTO:  %s\nCOMPETENCIA:  %s\nIDENTIFICADOR:  %s\n " % (self.codigo,self.competencia.strftime("%m/%Y"),self.identificador))
+            print("VALOR PRINCIPAL:  %s %s \n" % (
+            siglaMoeda, locale.currency(self.valor_principal, grouping=True, symbol=None)))
 
-        print("VALOR PRINCIPAL:  %s %s \n" % (
-        siglaMoeda, locale.currency(self.valor_principal, grouping=True, symbol=None)))
+            if (self.valor_outras_ent == 0):
+                print("VALOR DE OUTRAS ENT: %s \n" % (siglaMoeda))
+            else:
+                print("VALOR DE OUTRAS ENT: %s %s\n" % (
+                siglaMoeda, locale.currency(self.valor_outras_ent, grouping=True, symbol=None)))
 
-        if (self.valor_outras_ent == 0):
-            print("VALOR DE OUTRAS ENT: %s \n" % (siglaMoeda))
-        else:
-            print("VALOR DE OUTRAS ENT: %s %s\n" % (
-            siglaMoeda, locale.currency(self.valor_outras_ent, grouping=True, symbol=None)))
+            if (self.valor_jur == 0):
+                print("VALOR DO ATM/JUR/MULT: %s \n" % (siglaMoeda))
+            else:
+                print("VALOR DO ATM/JUR/MULT: %s %s\n" % (
+                siglaMoeda, locale.currency(self.valor_jur, grouping=True, symbol=None)))
 
-        if (self.valor_jur == 0):
-            print("VALOR DO ATM/JUR/MULT: %s \n" % (siglaMoeda))
-        else:
-            print("VALOR DO ATM/JUR/MULT: %s %s\n" % (
-            siglaMoeda, locale.currency(self.valor_jur, grouping=True, symbol=None)))
+            print("VALOR ARRECADADO: %s %s\n\n" % (siglaMoeda, locale.currency(self.valor_total, grouping=True, symbol=None)))
+            print("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n\n")
+            print("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.%s %s \n\n" % (
+                ciclo, self.data_pagto.strftime("%d/%m/%Y"), self.horaPagto, self.agenciaPagto[4][0:4],
+                self.agenciaPagto[5]))
+            print("\t\t\t AUTENTICACAO \n%s \n\n" % (self.autenticacao[2:40].upper()))
+            print("%s %s   %s   %s   %sC   %s\n\n" % (self.banco[3], self.agenciaPagto[4][0:4], "806248887",
+                                                      self.data_pagto.strftime("%d%m%y"),locale.currency(self.valor_total,
+                                                      grouping=True, symbol=None), self.tipoGuia[1] + "DIN"))
 
-        print("VALOR ARRECADADO: %s %s\n\n" % (siglaMoeda, locale.currency(self.valor_total, grouping=True, symbol=None)))
-        print("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n\n")
-        print("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.%s %s \n\n" % (
-            ciclo, self.data_pagto.strftime("%d/%m/%Y"), self.horaPagto, self.agenciaPagto[4][0:4],
-            self.agenciaPagto[5]))
-        print("\t\t\t AUTENTICACAO \n%s \n\n" % (self.autenticacao[2:40].upper()))
-        print("%s %s   %s   %s   %sC   %s\n\n" % (self.banco[3], self.agenciaPagto[4][0:4], "806248887",
-                                                  self.data_pagto.strftime("%d%m%y"),locale.currency(self.valor_total,
-                                                  grouping=True, symbol=None), self.tipoGuia[1] + "DIN"))
+        elif(SistemaOperacional.lower()=="windows"):
+            print("Formatando para o Ruindows")
+
         while True:
             entradaRecibo=input("[A]rquivar | [I]mprimir | [S]air :")
             if(entradaRecibo.lower()=='a'):
@@ -420,6 +424,7 @@ def monthdelta(date, delta):
 #Sistema Principal de Autenticacao
 def SistemaAutenticacao():
     global HorarioUltimoPagto
+    print(SistemaOperacional)
     print("\n *** Sistema de Autenticações Bancárias. Digite q para sair *** \n")
     _run = True
     while _run:
