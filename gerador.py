@@ -16,6 +16,7 @@ import locale
 
 import tempfile
 import platform
+import subprocess
 
 import time, calendar, datetime, random
 
@@ -44,6 +45,8 @@ class SistemaUsuario:
         #print(self.sistemaOperacional,self.plataforma,self.versao)
         if self.plataforma.lower() == "linux" or self.plataforma.lower() == "linux2":
             print("Imprimindo em Linux: %s" % args)
+            lpr = subprocess.Popen("/usr/bin/lpr", stdin=subprocess.PIPE)
+            lpr.stdin.write(args)
         elif self.plataforma.lower() == "darwin":
             print("Imprimindo em Mac: %s" %(args) )
         elif self.plataformalower() == "win32":
