@@ -49,11 +49,19 @@ class SistemaUsuario:
             lpr.stdin.write(args)
         elif self.plataforma.lower() == "darwin":
             print("Imprimindo em Mac: %s" %(args) )
-        elif self.plataformalower() == "win32":
-            #print("Imprimindo em Windows 32: %s" % args)
-            os.startfile("recibo.txt", "print")
-        elif self.plataformalower() == "win62":
-            #print("Imprimindo em Windows 64: %s" % args)
+        elif(self.plataformalower() == "win32" or self.plataformalower() == "win62"):
+            import win32api
+            import win32print
+            filename = tempfile.mktemp(".txt")
+            open(filename, "w").write("This is a test")
+            win32api.ShellExecute(
+                0,
+                "printto",
+                filename,
+                '"%s"' % win32print.GetDefaultPrinter(),
+                ".",
+                0
+            )
             os.startfile("recibo.txt", "print")
         else:
             print("Sistema Operacional Desconhecido")
@@ -105,39 +113,51 @@ class ComprovantePagto:
 
     def GeraRecibo(self,ciclo):
 
+        filename = tempfile.mktemp (".txt")
+        open (filename,"w")
+
+        recibo = open("recibo.txt", "w")
+
+
         if(SistemaOperacional.lower()=="darwin"):
-            recibo=open("recibo.txt","w")
-
             locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
-            info = locale.localeconv()  # formatando moeda local
-            siglaMoeda = info['currency_symbol']
-            recibo.write("\n%s              \n\n" %(self.banco[2].upper()))
-            recibo.write("COMPROVANTE DE PAGAMENTO DE %s \n\n" % self.tipoGuia[2].upper())
-            recibo.write("DADOS DO EMITENTE \nNOME: \nCPF/CNPJ: 00000000000000  \n\n")
-            recibo.write("CODIGO DO PAGAMENTO:  %s\n" % self.codigo)
-            recibo.write("COMPETENCIA:  %s\n" % self.competencia.strftime("%m/%Y"))
-            recibo.write("IDENTIFICADOR:  %s\n\n" % self.identificador)
+        elif(SistemaOperacional.lower()=="windows"):
+            locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
+        info = locale.localeconv()  # formatando moeda local
+        siglaMoeda = info['currency_symbol']
 
-            recibo.write("VALOR PRINCIPAL:  %s %s \n\n" %( siglaMoeda, locale.currency(self.valor_principal, grouping=True, symbol=None)))
-            if(self.valor_outras_ent==0):
-                recibo.write("VALOR DE OUTRAS ENT: %s \n" % (siglaMoeda))
-            else:
-                recibo.write("VALOR DE OUTRAS ENT: %s %s\n" %( siglaMoeda, locale.currency(self.valor_outras_ent, grouping=True, symbol=None)))
+        recibo.write("\n%s              \n\n" % (self.banco[2].upper()))
+        recibo.write("COMPROVANTE DE PAGAMENTO DE %s \n\n" % self.tipoGuia[2].upper())
+        recibo.write("DADOS DO EMITENTE \nNOME: \nCPF/CNPJ: 00000000000000  \n\n")
+        recibo.write("CODIGO DO PAGAMENTO:  %s\n" % self.codigo)
+        recibo.write("COMPETENCIA:  %s\n" % self.competencia.strftime("%m/%Y"))
+        recibo.write("IDENTIFICADOR:  %s\n\n" % self.identificador)
 
-            if(self.valor_jur==0):
-                recibo.write("VALOR DO ATM/JUR/MULT: %s \n" % (siglaMoeda))
-            else:
-                recibo.write("VALOR DO ATM/JUR/MULT: %s %s\n" %(siglaMoeda, locale.currency(self.valor_jur, grouping=True, symbol=None)))
+        recibo.write("VALOR PRINCIPAL:  %s %s \n\n" % (
+        siglaMoeda, locale.currency(self.valor_principal, grouping=True, symbol=None)))
+        if (self.valor_outras_ent == 0):
+            recibo.write("VALOR DE OUTRAS ENT: %s \n" % (siglaMoeda))
+        else:
+            recibo.write("VALOR DE OUTRAS ENT: %s %s\n" % (
+            siglaMoeda, locale.currency(self.valor_outras_ent, grouping=True, symbol=None)))
 
-            recibo.write("VALOR ARRECADADO: %s %s\n\n" %( siglaMoeda, locale.currency(self.valor_total, grouping=True, symbol=None)))
-            recibo.write("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n\n")
-            recibo.write("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.%s %s \n\n" % (
-                ciclo, self.data_pagto.strftime("%d/%m/%Y"), self.horaPagto, self.agenciaPagto[4][0:4], self.agenciaPagto[5]))
-            recibo.write("\t\t\t AUTENTICACAO \n%s \n\n" % (self.autenticacao[2:40].upper()))
-            recibo.write("%s %s   %s   %s   %sC   %s\n\n" %(self.banco[3],self.agenciaPagto[4][0:4],"806248887",self.data_pagto.strftime("%d%m%y"),
-                                                            locale.currency(self.valor_total, grouping=True, symbol=None),self.tipoGuia[1] + "DIN"))
-            recibo.close()
+        if (self.valor_jur == 0):
+            recibo.write("VALOR DO ATM/JUR/MULT: %s \n" % (siglaMoeda))
+        else:
+            recibo.write("VALOR DO ATM/JUR/MULT: %s %s\n" % (
+            siglaMoeda, locale.currency(self.valor_jur, grouping=True, symbol=None)))
 
+        recibo.write("VALOR ARRECADADO: %s %s\n\n" % (
+        siglaMoeda, locale.currency(self.valor_total, grouping=True, symbol=None)))
+        recibo.write("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n\n")
+        recibo.write("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.%s %s \n\n" % (
+            ciclo, self.data_pagto.strftime("%d/%m/%Y"), self.horaPagto, self.agenciaPagto[4][0:4],
+            self.agenciaPagto[5]))
+        recibo.write("\t\t\t AUTENTICACAO \n%s \n\n" % (self.autenticacao[2:40].upper()))
+        recibo.write("%s %s   %s   %s   %sC   %s\n\n" % (
+        self.banco[3], self.agenciaPagto[4][0:4], "806248887", self.data_pagto.strftime("%d%m%y"),
+        locale.currency(self.valor_total, grouping=True, symbol=None), self.tipoGuia[1] + "DIN"))
+        recibo.close()
 
     def GeraNumAutenticacao(self):
         if(self.NumUltimaAutenticacao==None):
