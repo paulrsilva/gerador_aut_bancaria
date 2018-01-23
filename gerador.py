@@ -49,11 +49,13 @@ class SistemaUsuario:
             lpr.stdin.write(args)
         elif self.plataforma.lower() == "darwin":
             print("Imprimindo em Mac: %s" %(args) )
-        elif(self.plataformalower() == "win32" or self.plataformalower() == "win62"):
+        elif(self.plataforma.lower() == "windows" or self.plataforma.lower() == "win62"):
             import win32api
             import win32print
-            filename = tempfile.mktemp(".txt")
-            open(filename, "w").write("This is a test")
+            #filename = tempfile.mktemp(".txt")
+            #open(filename, "w").write("This is a test")
+            '''
+            filename="recibo.txt"
             win32api.ShellExecute(
                 0,
                 "printto",
@@ -62,6 +64,7 @@ class SistemaUsuario:
                 ".",
                 0
             )
+            '''
             os.startfile("recibo.txt", "print")
         else:
             print("Sistema Operacional Desconhecido")
@@ -122,7 +125,7 @@ class ComprovantePagto:
         if(SistemaOperacional.lower()=="darwin"):
             locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
         elif(SistemaOperacional.lower()=="windows"):
-            locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
+            locale.setlocale(locale.LC_ALL, "")
         info = locale.localeconv()  # formatando moeda local
         siglaMoeda = info['currency_symbol']
 
