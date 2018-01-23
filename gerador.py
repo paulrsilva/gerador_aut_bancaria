@@ -15,6 +15,7 @@ from contextlib import closing
 import locale
 
 import tempfile
+import platform
 
 import time, calendar, datetime, random
 
@@ -29,10 +30,46 @@ ipLocal,ipRouter,ipExterno=nt.bogusNet()
 HorarioBancario=('10:00','16:00')
 # HorarioUltimoPagto=0 - Definida como Global em SistemaAutenticacao
 
+
+
+#Classe para identificacao do Sistema Operacional e Metodos de Operação e Impressao
+class SistemaUsuario:
+    def __init__(self):
+        self.sistemaOperacional=os.name
+        self.plataforma=platform.system()
+        self.versao=platform.release()
+    def sistema(self):
+        return (self.sistemaOperacional,self.plataforma,self.versao)
+    def imprimir(self,*args):
+        #print(self.sistemaOperacional,self.plataforma,self.versao)
+        if self.plataforma.lower() == "linux" or self.plataforma.lower() == "linux2":
+            print("Imprimindo em Linux: %s" % args)
+        elif self.plataforma.lower() == "darwin":
+            print("Imprimindo em Mac: %s" %(args) )
+        elif self.plataformalower() == "win32":
+            #print("Imprimindo em Windows 32: %s" % args)
+            os.startfile("recibo.txt", "print")
+        elif self.plataformalower() == "win62":
+            #print("Imprimindo em Windows 64: %s" % args)
+            os.startfile("recibo.txt", "print")
+        else:
+            print("Sistema Operacional Desconhecido")
+    def imprima(self,*args):
+        texto=str
+        for linha in args:
+            texto=texto+linha
+        return texto
+
 class ComprovantePagto:
     'classe comum para todos os pagamentos'
     compCount = 0
     NumUltimaAutenticacao=None
+
+    usuario=SistemaUsuario
+
+    # criando um objeto com as caracteristicas do computador do usuario
+    # para impressão e manipulação correta de arquivos
+
 
     def __init__(self, banco, agenciaPagto, tipoGuia, codigo, data_venc, data_pagto, horaPagto, competencia, identificador, valor_principal,
                  valor_outras_ent, valor_jur, valor_total, autenticacao):
@@ -62,6 +99,7 @@ class ComprovantePagto:
     def displayCount(self):
         print("Total de Pagamentos %d" % ComprovantePagto.compCount)
         return ComprovantePagto.compCount
+
 
     def GeraRecibo(self,ciclo):
         recibo=open("recibo.txt","w")
@@ -116,6 +154,7 @@ class ComprovantePagto:
                                              str(self.valor_total).replace(".",","),self.data_venc.strftime("%d/%d")))
 
     def MostraRecibo(self,ciclo):
+
         locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
         info = locale.localeconv()  # formatando moeda local
         siglaMoeda = info['currency_symbol']
@@ -154,11 +193,16 @@ class ComprovantePagto:
                 pass
             elif(entradaRecibo.lower()=='i'):
                 self.GeraRecibo(self.Ciclo())
-                os.startfile("recibo.txt", "print")
+                self.Imprimir("recibo.txt")
             elif(entradaRecibo.lower()=='s'):
                 break
             else:
                 print("Digite A, I ou S\n")
+
+    def Imprimir(self,arquivo):
+        usuario=SistemaUsuario()
+        usuario.imprimir(arquivo)
+
 
 bancos = [ ("001", "Banco do Brasil S.A.", "BB"),
            ("104","Caixa Econômica Federal", "CE"),
@@ -347,9 +391,18 @@ def input_float(entrada):
     while True:
         try:
             return (float(entrada))
-        except ValueError:
+        except ValueError as e:
             print("Os decimais devem ser separados com ponto '.'")
             print("Apenas números são permitidos")
+            print(type(e))
+            print(e.args)
+            print(e)
+            entrada=input("\nDigite o valor novamente: ")
+        finally:
+            if(type(entrada)==str and len(entrada)==0):
+                entrada=0
+                print('valor zero atribuido')
+
 
 
 #Função para calcular o mes anterior - Competencia
@@ -493,7 +546,6 @@ def SistemaAutenticacao():
 
                                         pagamentoN = ComprovantePagto(**d)
 
-
                                         while True:
                                             EntradaImpressao = input("Digite R para Recibo ou A para Autenticação: ")
                                             if (EntradaImpressao.lower() == 'r'):
@@ -505,8 +557,9 @@ def SistemaAutenticacao():
                                                 entradaAutOpcoes=input("[I]mprimir | [A]rquivar | [S]air")
                                                 while True:
                                                     if(entradaAutOpcoes.lower()=='i'):
-                                                        os.startfile("\n\n %s" %pagamentoN.MostraAutenticacao(), "print")
-                                                        pass
+                                                        pagamentoN.Imprimir("autenticacao.txt")
+                                                        break
+                                                        #os.startfile("\n\n %s" %pagamentoN.MostraAutenticacao(), "print")
                                                     elif(entradaAutOpcoes.lower()=='a'):
                                                         pass
                                                     elif(entradaAutOpcoes.lower()=='s'):
@@ -530,6 +583,7 @@ def main():
         print("usando lista de bancos locais \n \n")
     else:
         print("novo banco de dados padrão criado \n \n ")
+
 
     SistemaAutenticacao()
 

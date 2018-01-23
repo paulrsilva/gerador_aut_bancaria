@@ -7,6 +7,9 @@ import re
 
 #import netifaces
 
+def bogusNet():
+    return("192.168.0.100","192.168.0.1","172.0.8.1")
+
 def pegaNetInfo():
     #pegando o ip local
     ipLocal = socket.gethostbyname(socket.gethostname())
@@ -20,4 +23,4 @@ def pegaNetInfo():
     grab = re.findall('([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)', site)
     ipExterno = grab[0]
 
-    return ipLocal, ipRouter, ipExterno
+    return(ipLocal, ipRouter, ipExterno)
