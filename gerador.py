@@ -160,40 +160,41 @@ class ComprovantePagto:
     def MostraRecibo(self,ciclo):
         if(SistemaOperacional.lower()=="darwin"):
             locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
-            info = locale.localeconv()  # formatando moeda local
-            siglaMoeda = info['currency_symbol']
-            print("\n%s              \n" % (self.banco[2].upper()))
-            print("COMPROVANTE DE PAGAMENTO DE %s \n" % self.tipoGuia[2].upper())
-            print("DADOS DO EMITENTE \nNOME: \nCPF/CNPJ: 00000000000000  \n\n")
-            print("CODIGO DO PAGAMENTO:  %s\nCOMPETENCIA:  %s\nIDENTIFICADOR:  %s\n " % (self.codigo,self.competencia.strftime("%m/%Y"),self.identificador))
-
-            print("VALOR PRINCIPAL:  %s %s \n" % (
-            siglaMoeda, locale.currency(self.valor_principal, grouping=True, symbol=None)))
-
-            if (self.valor_outras_ent == 0):
-                print("VALOR DE OUTRAS ENT: %s \n" % (siglaMoeda))
-            else:
-                print("VALOR DE OUTRAS ENT: %s %s\n" % (
-                siglaMoeda, locale.currency(self.valor_outras_ent, grouping=True, symbol=None)))
-
-            if (self.valor_jur == 0):
-                print("VALOR DO ATM/JUR/MULT: %s \n" % (siglaMoeda))
-            else:
-                print("VALOR DO ATM/JUR/MULT: %s %s\n" % (
-                siglaMoeda, locale.currency(self.valor_jur, grouping=True, symbol=None)))
-
-            print("VALOR ARRECADADO: %s %s\n\n" % (siglaMoeda, locale.currency(self.valor_total, grouping=True, symbol=None)))
-            print("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n\n")
-            print("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.%s %s \n\n" % (
-                ciclo, self.data_pagto.strftime("%d/%m/%Y"), self.horaPagto, self.agenciaPagto[4][0:4],
-                self.agenciaPagto[5]))
-            print("\t\t\t AUTENTICACAO \n%s \n\n" % (self.autenticacao[2:40].upper()))
-            print("%s %s   %s   %s   %sC   %s\n\n" % (self.banco[3], self.agenciaPagto[4][0:4], "806248887",
-                                                      self.data_pagto.strftime("%d%m%y"),locale.currency(self.valor_total,
-                                                      grouping=True, symbol=None), self.tipoGuia[1] + "DIN"))
-
         elif(SistemaOperacional.lower()=="windows"):
-            print("Formatando para o Ruindows")
+            locale.setlocale(locale.LC_ALL, "")
+        info = locale.localeconv()  # formatando moeda local
+        siglaMoeda = info['currency_symbol']
+        print("\n%s              \n" % (self.banco[2].upper()))
+        print("COMPROVANTE DE PAGAMENTO DE %s \n" % self.tipoGuia[2].upper())
+        print("DADOS DO EMITENTE \nNOME: \nCPF/CNPJ: 00000000000000  \n\n")
+        print("CODIGO DO PAGAMENTO:  %s\nCOMPETENCIA:  %s\nIDENTIFICADOR:  %s\n " % (self.codigo,self.competencia.strftime("%m/%Y"),self.identificador))
+
+        print("VALOR PRINCIPAL:  %s %s \n" % (
+        siglaMoeda, locale.currency(self.valor_principal, grouping=True, symbol=None)))
+
+        if (self.valor_outras_ent == 0):
+            print("VALOR DE OUTRAS ENT: %s \n" % (siglaMoeda))
+        else:
+            print("VALOR DE OUTRAS ENT: %s %s\n" % (
+            siglaMoeda, locale.currency(self.valor_outras_ent, grouping=True, symbol=None)))
+
+        if (self.valor_jur == 0):
+            print("VALOR DO ATM/JUR/MULT: %s \n" % (siglaMoeda))
+        else:
+            print("VALOR DO ATM/JUR/MULT: %s %s\n" % (
+            siglaMoeda, locale.currency(self.valor_jur, grouping=True, symbol=None)))
+
+        print("VALOR ARRECADADO: %s %s\n\n" % (siglaMoeda, locale.currency(self.valor_total, grouping=True, symbol=None)))
+        print("DOCUMENTO PAGO DENTRO DAS CONDICOES \nDEFINIDAS PELA PORTARIA RFB No.\t1976/2008 \n\n")
+        print("CICLO:  %s \nREALIZADO EM: %s as %s \nAG.%s %s \n\n" % (
+            ciclo, self.data_pagto.strftime("%d/%m/%Y"), self.horaPagto, self.agenciaPagto[4][0:4],
+            self.agenciaPagto[5]))
+        print("\t\t\t AUTENTICACAO \n%s \n\n" % (self.autenticacao[2:40].upper()))
+        print("%s %s   %s   %s   %sC   %s\n\n" % (self.banco[3], self.agenciaPagto[4][0:4], "806248887",
+                                                  self.data_pagto.strftime("%d%m%y"),locale.currency(self.valor_total,
+                                                  grouping=True, symbol=None), self.tipoGuia[1] + "DIN"))
+
+
 
         while True:
             entradaRecibo=input("[A]rquivar | [I]mprimir | [S]air :")
