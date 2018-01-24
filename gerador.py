@@ -22,6 +22,7 @@ import time, calendar, datetime, random
 
 from _datetime import datetime as dt
 
+import comprovante as recibo
 
 #Importando Módulo para Operações de Rede Adicionais
 import ferramentasderede as nt
@@ -35,12 +36,15 @@ SistemaOperacional = platform.system()
 
 #Classe para identificacao do Sistema Operacional e Metodos de Operação e Impressao
 class SistemaUsuario:
+
     def __init__(self):
         self.sistemaOperacional=os.name
         self.plataforma=platform.system()
         self.versao=platform.release()
+
     def sistema(self):
         return (self.sistemaOperacional,self.plataforma,self.versao)
+
     def imprimir(self,*args):
         #print(self.sistemaOperacional,self.plataforma,self.versao)
         if self.plataforma.lower() == "linux" or self.plataforma.lower() == "linux2":
@@ -68,6 +72,7 @@ class SistemaUsuario:
             os.startfile("recibo.txt", "print")
         else:
             print("Sistema Operacional Desconhecido")
+
     def checa_sistema(self):
         return self.plataforma.lower()
 
@@ -222,7 +227,18 @@ class ComprovantePagto:
         while True:
             entradaRecibo=input("[A]rquivar | [I]mprimir | [S]air :")
             if(entradaRecibo.lower()=='a'):
-                pass
+
+                dados={"BANCO": self.banco[2], "GUIA": self.tipoGuia[2].upper(), "CodPagto": self.codigo,
+                       "COMPETENCIA":self.competencia.strftime("%m/%Y"),"IDENTIFICADOR":self.identificador,
+                       "VALOR PRINCIPAL":locale.currency(self.valor_principal, grouping=True, symbol=None),
+                       "VALOR_ENT":locale.currency(self.valor_outras_ent, grouping=True, symbol=None),
+                       "VALORJUR": locale.currency(self.valor_jur, grouping=True, symbol=None),
+                       "VALORARRECADADO":locale.currency(self.valor_total, grouping=True, symbol=None),
+                       "CICLO":ciclo, "DATAPAGTO":self.data_pagto.strftime("%d/%m/%Y")
+                       }
+
+                recibo.GerarPDF(**dados)
+
             elif(entradaRecibo.lower()=='i'):
                 self.GeraRecibo(self.Ciclo())
                 self.Imprimir("recibo.txt")
@@ -234,6 +250,11 @@ class ComprovantePagto:
     def Imprimir(self,arquivo):
         usuario=SistemaUsuario()
         usuario.imprimir(arquivo)
+
+    def GeraPDF(self):
+        filename = tempfile.mktemp(".txt")
+        open(filename, "w").write("este é um teste")
+        print(filename)
 
 
 bancos = [ ("001", "Banco do Brasil S.A.", "BB"),
