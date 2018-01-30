@@ -234,7 +234,9 @@ class ComprovantePagto:
                        "VALOR_ENT":locale.currency(self.valor_outras_ent, grouping=True, symbol=None),
                        "VALORJUR": locale.currency(self.valor_jur, grouping=True, symbol=None),
                        "VALORARRECADADO":locale.currency(self.valor_total, grouping=True, symbol=None),
-                       "CICLO":ciclo, "DATAPAGTO":self.data_pagto.strftime("%d/%m/%Y")
+                       "CICLO":ciclo, "DATAPAGTO":self.data_pagto.strftime("%d/%m/%Y"),"HORAPAGTO":self.horaPagto,
+                       "AGENCIA": self.agenciaPagto[4][0:4], "AG_PAGTO":self.agenciaPagto[5],
+                       "AUTENTICACAO": self.autenticacao[2:40].upper()
                        }
 
                 recibo.GerarPDF(**dados)
@@ -263,8 +265,8 @@ bancos = [ ("001", "Banco do Brasil S.A.", "BB"),
            ("341","Itaú Unibanco S.A.","ITAU")
 ]
 
-tiposDeGuia = [("GPS", "Guia de Previdência Social"),
-               ("GRU", "Guia de Recolhimendo da União" )
+tiposDeGuia = [("GPS", "Guia de Prev. Social"),
+               ("GRU", "Guia de Rec. da União" )
 ]
 
 agencias = [ ("BB","RJ","Petropolis","0080", "PETROPOLIS PETROPOLIS"),

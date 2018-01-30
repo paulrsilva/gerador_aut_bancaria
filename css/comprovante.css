@@ -1,0 +1,19 @@
+@charset "UTF-8";
+#recibo{
+  /***  CSS Position  ***/
+  position:static;
+  float:left;
+
+  /***  CSS Box Model  ***/
+  width:6.00cm;
+  max-width:6.00cm;
+  height:12.00cm;
+  margin-top:2px;
+  margin-bottom:2px;
+  margin-left:10px;
+
+  /***  CSS Text and Font  ***/
+  font-family:'Arial Narrow','Nimbus Sans L',sans-serif;
+  font-size:7px;
+
+}

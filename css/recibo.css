@@ -1,0 +1,16 @@
+#autentica_title{
+  /***  CSS Position  ***/
+  position:static;
+  float:left;
+
+  /***  CSS Box Model  ***/
+  width:8.00cm;
+  max-width:8.00cm;
+  height:6.00cm;
+  margin:10px;
+
+  /***  CSS Text and Font  ***/
+  font-family:'Arial Narrow','Nimbus Sans L',sans-serif;
+  font-size:7px;
+
+}

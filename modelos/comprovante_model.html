@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/comprovante.css"
+</head>
+<body>
+<div class="recibo">
+<P>{{banco_pagamento}}</P>
+<p>COMPROVANTE DE PAGAMENTO DE {{guia}}</p>
+<P>DADOS DO EMITENTE <BR> NOME: <BR> CPF/CNPJ: 000000000000000 </P>
+<P>CODIGO DO PAGAMENTO:   {{CodPagto}}<BR>COMPETENCIA:   {{Competencia}}<BR>
+    IDENTIFICADOR:   {{Identificador}}</P>
+<P>VALOR PRINCIPAL:   R$  {{ValorPrincipal}} </P>
+<P>VALOR DE OUTRAS ENT:   R$  {{ValorEntidades}}
+    <BR>VALOR DO ATM/JUR/MULT:   R$  {{ValorJuros}} <BR>VALOR ARRECADADO:   R$ {{ValorArrecadado}}  </P>
+<P>DOCUMENTO PAGO DENTRO DAS CONDICOES<BR>
+DEFINIDAS PELA PORTARIA RFB No.&emsp; 1976/2008 </P>
+<p>CICLO:  {{ciclo}} <BR>REALIZADO EM  {{data_pagto}}   as  {{hora_pagto}} <BR>AG. {{agencia}}    {{ag_pagto}}</p>
+<p align="center>">
+    AUTENTICACAO<BR>{{autenticacao}}
+</p>
+
+<div id="botton_id" class="comprovante">
+    <table style="width: 100%;" border="1" cellpadding="2">
+        <tbody>
+            <tr>
+                <td align="center">BANCO AG</td>
+                <td>806248887</td>
+                <td>DDMMYY</td>
+                <td>{{ValorArrecadado}}C</td>
+                <td>GPSDIN</td>
+            </tr>
+        </tbody>
+</table>
+</div>
+</div>
+
+
+</body>
+</html>

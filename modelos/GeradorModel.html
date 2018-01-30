@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<head>
+<title>WebKit Preview</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+
+body {
+  margin:0px;
+  padding:0px;
+  background-color: rgb(100.0%, 100.0%, 100.0%);
+}
+
+	
+.table {
+    display: table;
+    width: 100%;
+	height: 10px
+	border: 0.5px solid LightGray;
+}
+
+.row {
+    display: table-row;
+}
+
+.cell {
+	display: table-cell;
+	width: 20%;
+	height: inherit
+	border: 0.5px solid LightGray;
+}
+
+#parentDiv{
+  position:static;
+  margin:0px;
+  padding:0px;
+}
+
+  /* This is your div's css. */
+#innerDiv{
+  /***  CSS Position  ***/
+  position:static;
+  float:left;
+
+  /***  CSS Box Model  ***/
+  width:6.00cm;
+  height:12.00cm;
+  margin-top:1px;
+  margin-bottom:2px;
+  margin-left:10px;
+
+  /***  CSS Text and Font  ***/
+  font-family:'Arial Narrow','Nimbus Sans L',sans-serif;
+  font-size:7px;
+
+}
+</style>
+</head>
+
+<body>
+
+<!--    This is your div.   -->
+<div id="innerDiv">
+<P>{{banco_pagamento}}</P>
+<p>CCOMPROVANTE DE PAGAMENTO DE {{guia}}</p>
+<P>DADOS DO EMITENTE <BR> NOME: <BR> CPF/CNPJ: 000000000000000 </P>
+<P>CODIGO DO PAGAMENTO:   {{CodPagto}}<BR>COMPETENCIA:   {{Competencia}}<BR>
+    IDENTIFICADOR:   {{Identificador}}</P>
+<P>VALOR PRINCIPAL:   R$  {{ValorPrincipal}} </P>
+<P>VALOR DE OUTRAS ENT:   R$  {{ValorEntidades}}
+    <BR>VALOR DO ATM/JUR/MULT:   R$  {{ValorJuros}} <BR>VALOR ARRECADADO:   R$ {{ValorArrecadado}}  </P>
+<P>DOCUMENTO PAGO DENTRO DAS CONDICOES<BR>
+DEFINIDAS PELA PORTARIA RFB No.&emsp; 1976/2008 </P>
+<p>CICLO:  {{ciclo}} <BR>REALIZADO EM  {{data_pagto}}   as  {{hora_pagto}} <BR>AG. {{agencia}}    {{ag_pagto}}</p>
+<p>
+ <center>AUTENTICACAO</center>{{autenticacao}}
+</p>
+
+<div class="table">
+    <div class="row">
+        <div class="cell">
+            <p>BB 0080</p>
+        </div>
+        <div class="cell">
+            <p>806248887</p>
+        </div>
+        <div class="cell">
+            <p>190118</p>
+        </div>
+        <div class="cell">
+            <p>2.100,89C</p>
+        </div> 
+        <div class="cell">
+            <p>GPSDIN</p>
+        </div>
+    </div>
+</div>
+
+</div>
+
+
+</body>
+</html>
