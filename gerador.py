@@ -637,6 +637,9 @@ def SistemaAutenticacao():
                                         print("\n %d Pagamentos Efetuados" % (pagamentoN.displayCount()))
 def main():
 
+    if sys.platform=="win32":
+        base = "console"
+
     if(verificaBD()):
         print("usando lista de bancos locais \n \n")
     else:
