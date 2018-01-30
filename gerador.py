@@ -20,7 +20,7 @@ import subprocess
 
 import time, calendar, datetime, random
 
-from _datetime import datetime as dt
+from datetime import datetime as dt
 
 import comprovante as recibo
 
@@ -131,6 +131,8 @@ class ComprovantePagto:
             locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
         elif(SistemaOperacional.lower()=="windows"):
             locale.setlocale(locale.LC_ALL, "")
+        else:
+            locale.setlocale(locale.LC_ALL, "") 
         info = locale.localeconv()  # formatando moeda local
         siglaMoeda = info['currency_symbol']
 
