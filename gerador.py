@@ -21,6 +21,7 @@ import subprocess
 import time, calendar, datetime, random
 
 from datetime import datetime as dt
+from datetime import date
 
 import comprovante as recibo
 
@@ -114,6 +115,15 @@ class ComprovantePagto:
         ciclo=self.competencia.strftime("%d.%m.%Y")+identificador
         return ciclo
 
+    def CodigoAgPagto(self):
+        d = date.today()
+        t=d.timetuple()
+        parte1=self.agenciaPagto[4][0:4]
+        parte2=str(t[1])+str(t[7])
+        parte3=self.banco[1]
+        return (str(parte1)+str(parte2+str(parte3)))
+
+
     def displayCount(self):
         print("Total de Pagamentos %d" % ComprovantePagto.compCount)
         return ComprovantePagto.compCount
@@ -165,7 +175,7 @@ class ComprovantePagto:
             self.agenciaPagto[5]))
         recibo.write("\t\t\t AUTENTICACAO \n%s \n\n" % (self.autenticacao[2:40].upper()))
         recibo.write("%s %s   %s   %s   %sC   %s\n\n" % (
-        self.banco[3], self.agenciaPagto[4][0:4], "806248887", self.data_pagto.strftime("%d%m%y"),
+        self.banco[3], self.agenciaPagto[4][0:4], self.CodigoAgPagto(), self.data_pagto.strftime("%d%m%y"),
         locale.currency(self.valor_total, grouping=True, symbol=None), self.tipoGuia[1] + "DIN"))
         recibo.close()
 
@@ -181,7 +191,6 @@ class ComprovantePagto:
             numAut="{:0>4d}".format(numAutentica)
             self.NumUltimaAutenticacao = numAut
             return numAut
-
 
     def MostraAutenticacao(self):
         return("\n%s  %s  %s  %s  %s \t  %sR %s" % (self.banco[3],self.agenciaPagto[4][0:4],self.banco[1],self.data_pagto.strftime("%d%m%y"),self.GeraNumAutenticacao(),
@@ -224,8 +233,6 @@ class ComprovantePagto:
                                                   self.data_pagto.strftime("%d%m%y"),locale.currency(self.valor_total,
                                                   grouping=True, symbol=None), self.tipoGuia[1] + "DIN"))
 
-
-
         while True:
             entradaRecibo=input("[A]rquivar | [I]mprimir | [S]air :")
             if(entradaRecibo.lower()=='a'):
@@ -238,7 +245,9 @@ class ComprovantePagto:
                        "VALORARRECADADO":locale.currency(self.valor_total, grouping=True, symbol=None),
                        "CICLO":ciclo, "DATAPAGTO":self.data_pagto.strftime("%d/%m/%Y"),"HORAPAGTO":self.horaPagto,
                        "AGENCIA": self.agenciaPagto[4][0:4], "AG_PAGTO":self.agenciaPagto[5],
-                       "AUTENTICACAO": self.autenticacao[2:40].upper()
+                       "AUTENTICACAO": self.autenticacao[2:40].upper(),"siglaBanco":self.banco[3],
+                        "codAgPagto":self.CodigoAgPagto(), "compRodape":self.data_pagto.strftime("%d%m%y"),
+                       "tipoGuia":self.tipoGuia[1] + "DIN"
                        }
 
                 recibo.GerarPDF(**dados)
